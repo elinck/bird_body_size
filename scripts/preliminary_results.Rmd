@@ -1,0 +1,289 @@
+---
+title: "How has bird body size responded to temperature changes across latitude? Some preliminary results"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Overview and approach
+
+In this study, we have three main questions: 1) Have bird body sizes across a diverse range of species and locations changed over the past few decades, and if so, how? 2) Are these changes related to realized changes in temperature due to anthropogenic global warming? 3) Does latitude predict the degree to which body size responds to temperature? We hypothesized we would indeed see a response in body size to recent climate change, that body size would be negatively correlated to temperature, and that body size changes would be greatest at low latitudes. I've put all code and some early figures up on GitHub (https://github.com/elinck/bird_body_size) if you're interested in digging in deeper, but this document outlines the approach we've taken so far to cleaning and filtering data, checking assumptions and exploring relationships, and statistical analysis. 
+
+### Data cleaning and filtering
+
+To address these questions, we're taking advantage of of seven longitudinal datasets from across the Americas, with sites in Brazil, Panama, Puerto Rico, California, Wyoming, Pennsylvania, and Illinois. These data were previously collated and formatted by hand by Matt McGee—thanks, Matt!. 
+
+Here are the number of data points and unique species from these files prior to any filtering: 
+
+```{r, include=FALSE}
+library(readr)
+brazil.full <- read_csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/brazil_raw.csv") 
+panama.full <- read_csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/panama_raw.csv") 
+guanica.full <- read_csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/guanica_raw.csv") 
+powdermill.full <- read_csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/powdermill_raw.csv")
+maps.full <- read_csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/maps_raw.csv")
+palo.full <- read_csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/palo_raw.csv") 
+tss.full <- maps.full[maps.full$`Data Set`=="TSS",]
+wate.full <- maps.full[maps.full$`Data Set`=="WATE",]
+a <- nrow(brazil.full) # number of observations, brazil 
+b <- length(unique(brazil.full$`Updated Scientific Name`)) # number of unique species, brazil 
+c <- nrow(panama.full) # number of observations, panama 
+d <- length(unique(panama.full$`Updated Scientific Name`)) # number of unique species, panama 
+e <- nrow(guanica.full) # number of observations, guanica 
+f <- length(unique(guanica.full$`Updated Scientific Name`)) # number of unique species, guanica 
+g <- nrow(powdermill.full) # number of observations, powdermill 
+h <- length(unique(powdermill.full$`Updated Scientific Name`)) # number of unique species, powdermill
+i <- nrow(palo.full) # number of observations, palmarin
+j <- length(unique(palo.full$`Updated Scientific Name`)) # number of unique species, palomarin
+k <- nrow(tss.full) # number of observations, teton science center
+l <- length(unique(tss.full$`Updated Scientific Name`)) # number of unique species, teton science center
+m <- nrow(wate.full) # number of observations, waterfall glen 
+n <- length(unique(wate.full$`Updated Scientific Name`)) # number of unique species, waterfall glen
+r1 <- cbind("brazil", a, b)
+colnames(r1) <- c("site","species","observations")
+r2 <- cbind("panama", c, d)
+colnames(r2) <- c("site","species","observations")
+r3 <- cbind("guanica", e, f)
+colnames(r3) <- c("site","species","observations")
+r4 <- cbind("powdermill", g, h)
+colnames(r4) <- c("site","species","observations")
+r5 <- cbind("palomarin", i, j)
+colnames(r5) <- c("site","species","observations")
+r6 <- cbind("teton", k, l)
+colnames(r6) <- c("site","species","observations")
+r7 <- cbind("waterfall", m, n)
+colnames(r7) <- c("site","species","observations")
+df1 <- rbind.data.frame(r1,r2,r3,r4,r5,r6,r7)
+colnames(df1) <- c("site","species","observations")
+df1$species <- as.numeric(as.character(df1$species))
+df1$observations <- as.numeric(as.character(df1$observations))
+raw_data <- df1
+```
+```{r}
+raw_data
+```
+
+As you can see, a good amount of data! Depending on the site, we have anywhere from 68 species and 2398 records (at Waterfall Glen) to 189 species (in Panama) to 719781 records (at Powdermill). But of course, our project requires filtering these data down to records that will allow us to make comparisons among sites with as few assumptions as possible. Ultimately, we're hoping to analyze three different datasets, to see whether patterns remain the same depending on which species and records we look at: a dataset that includes records that meet our criteria regardless of sex, a dataset that includes only male birds meeting our criteria, and a dataset that includes only female birds meeting our criteria. 
+
+For our sex-blind dataset, we applied the following filters: 
+
+1) We excluded all juvenile birds, to ensure body size data represented mature individuals. However, we retained records that had either NA or "Unknown" in the "Age" column, as this would dramatically reduce the numbe of observations in certain datasets; 
+
+2) We excluded all records without mass data, or records with a mass of 0; 
+
+3) We dropped all records with a mass greater or less than 4 standard deviations from the mean for each species, as these are likely errors; 
+
+4) We included only the first recorded data point for each individual bird, based on date of capture and band number (when available); 
+
+5) To ensure a sufficient number of points for estimating the slope of change in mass over time, we included only species with at least five records in each of two time periods, which were defined as either less than or equal to the median year of data collection for a given locality, or greater than the median year of data collection. E.g., for the Brazil dataset, we excluded all species without at least 5 records before 1984, or five records from 1984 to 2013.
+
+6) For temperate sites (Palomarin, Powdermill, Teton Science School, Waterfall Glen), we included only records from the breeding season, which we defined as the months of June and July. In contrast, we did not apply any temporal filter on data from tropical sites. While comparing body size of birds in breeding condition across latitude would obviously be ideal, year-round breeding in the tropics—or breeding activity correlated with locally-specific dry and wet seasons—make selecting a particular set of months as comparable to the temperate breeding season difficult to impossible. Further, we are constrained both by the limited number of total records from tropical sites, and the temporal distribution of banding effort.  
+
+For our sex-specific datasets, we applied the same filters as above, but with the following modifications / additions:
+
+1) We excluded all individuals of unknown sex;
+
+2) We relaxed the minimum number of observations per time period (again determined by the median year of data collection) to 3 for each sex. E.g., for the Brazil dataset, we excluded all species without at least three male and three female records before 1984, or three male and three female records from 1984 to 2013. (As this drops species where we may have sufficient observations of one sex but not the other, we may change this in the future, but for the moment it allows for a direct comparison of size trends between sexes of the same species, so we're keeping it.)
+
+After applying these filters, how much data do we have left in our sex-blind datasets? Let's take a look:   
+
+
+```{r, include=FALSE}
+brazil.plotting <- read.csv(file = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/brazil_filtered_all.csv")[-1]
+panama.plotting <- read.csv(file = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/panama_filtered_all.csv")[-1]
+guanica.plotting <- read.csv(file = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/guanica_filtered_all.csv", fileEncoding="latin1")[-1]
+palo.plotting <- read.csv(file = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/palo_filtered_all.csv")[-1]
+powdermill.plotting <- read.csv(file = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/powdermill_filtered_all.csv")[-1]
+tss.plotting <- read.csv(file = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/tss_filtered_all.csv")[-1]
+wate.plotting <- read.csv(file = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/wate_filtered_all.csv")[-1]
+a <- nrow(brazil.plotting) # number of observations, brazil, filtered
+b <- length(unique(brazil.plotting$species)) # number of unique species, brazil, filtered 
+c <- nrow(panama.plotting) # number of observations, panama, filtered,
+d <- length(unique(panama.plotting$species)) # number of unique species, panama, filtered 
+e <- nrow(guanica.plotting) # number of observations, guanica, filtered
+f <- length(unique(guanica.plotting$species)) # number of unique species, guanica, filtered
+g <- nrow(powdermill.plotting) # number of observations, powdermill, filtered
+h <- length(unique(powdermill.plotting$species)) # number of unique species, powdermill, filtered
+i <- nrow(palo.plotting) # number of observations, palomarin, filtered
+j <- length(unique(palo.plotting$species)) # number of unique species, palomarin, filtered
+k <- nrow(tss.plotting) # number of observations, teton science center
+l <- length(unique(tss.plotting$species)) # number of unique species, teton science center, filtered
+m <- nrow(wate.plotting) # number of observations, waterfall glen, filtered
+n <- length(unique(wate.plotting$species)) # number of unique species, waterfall glen, filtered
+
+r1 <- cbind("brazil", a, b)
+colnames(r1) <- c("site","species","observations")
+r2 <- cbind("panama", c, d)
+colnames(r2) <- c("site","species","observations")
+r3 <- cbind("guanica", e, f)
+colnames(r3) <- c("site","species","observations")
+r4 <- cbind("powdermill", g, h)
+colnames(r4) <- c("site","species","observations")
+r5 <- cbind("palomarin", i, j)
+colnames(r5) <- c("site","species","observations")
+r6 <- cbind("teton", k, l)
+colnames(r6) <- c("site","species","observations")
+r7 <- cbind("waterfall", m, n)
+colnames(r7) <- c("site","species","observations")
+df1 <- rbind.data.frame(r1,r2,r3,r4,r5,r6,r7)
+colnames(df1) <- c("site","species","observations")
+df1$species <- as.numeric(as.character(df1$species))
+df1$observations <- as.numeric(as.character(df1$observations))
+filtered_data <- df1
+```
+```{r}
+filtered_data
+```
+
+Even with those fairly loose filters, we've lost a lot of data—down to a single species and 53 records at Waterfall Glen, even. So it goes. Finally, we'll merge these datasets, but drop any species that occur at multiple sites from all but one. 
+
+(I've generated plots body size change over time for all species. While there are too many / they are too big to include in this document, you can view them here: https://github.com/elinck/bird_body_size/tree/master/plots)
+
+### Checking assumptions
+
+Before analyzing these data, we should evaluate a few basic assumptions we're making. Because mass (in grams) is the only metric of body size recorded for the majority of observations across datasets, we'll be using it as the response variable in our model. But mass can be an imperfect proxy for body size for a variety of reasons. As a gut check, we'll see if the slope of change in mass over time is correlated with the slope of our two other body size measures—wing length and tarsus length—for the subset of all records that have these data. Let's visualize this: 
+
+```{r, echo=FALSE}
+library(ggplot2)
+wl.df <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/correlations_wl.csv")
+ggplot(wl.df, aes(x=slope_mass, y=slope_wl)) +
+  theme_classic() +
+  geom_point(pch=2) +
+  geom_smooth(method="lm",color="black",linetype="dashed")
+  #xlim(-0.5,0.5) +
+  #ylim(-0.5,0.5)
+
+```
+```{r}
+mod.wl <- lm(slope_wl ~ slope_mass, wl.df) # summarize 
+mod.wl.sum <- summary(mod.wl) # summarize model
+mod.wl.sum$adj.r.squared # r^2 value
+mod.wl.sum$coefficients[2,4] # p-value
+```
+
+Well, not a very good correlation, is it! It's possible this is being driven by a handful of outliers, but it *does* make some degree of biological sense; wing length is going to vary quite a bit across molt cycle, etc. Let's check out tarsus length, though we have fewer data. 
+
+```{r, echo=FALSE}
+tarsus.df <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/correlations_tarsus.csv")
+ggplot(tarsus.df, aes(x=slope_mass, y=slope_tarsus)) +
+  theme_classic() +
+  geom_point(pch=2) +
+  geom_smooth(method="lm",color="black",linetype="dashed") #+
+  #xlim(-0.5,0.5) +
+  #ylim(-0.5,0.5)
+
+```
+
+```{r}
+mod.tarsus <- lm(slope_tarsus ~ slope_mass, tarsus.df) # summarize 
+mod.tarsus.sum <- summary(mod.tarsus) # summarize model
+mod.tarsus.sum$adj.r.squared # r^2 value
+mod.tarsus.sum$coefficients[2,4] # p-value
+```
+
+Still bad! Well, I hope mass is a good metric...
+
+Lastly, let's check to make sure there's not a correlation between time of capture and year, to make sure we aren't introducing a systematic bias into our data related to changing banding practices.
+
+```{r, include=FALSE}
+library(chron)
+library(readr)
+brazil.full <- read_csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/brazil_raw.csv") 
+panama.full <- read_csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/panama_raw.csv") 
+guanica.full <- read_csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/guanica_raw.csv") 
+powdermill.full <- read_csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/powdermill_raw.csv")
+palo.full <- read_csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/powdermill_raw.csv")
+maps.full <- read_csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/maps_raw.csv")
+brazil.full <- brazil.full[,c("Year","Time")]
+panama.full <- panama.full[,c("Year","Time")]
+guanica.full <- guanica.full[,c("Year","Time")]
+powdermill.full <- powdermill.full[,c("Year","Time")]
+palo.full <- palo.full[,c("Year","Time")]
+maps.full <- maps.full[,c("Year","TIME")]
+colnames(maps.full) <- c("Year","Time")
+master.time <- rbind.data.frame(brazil.full,panama.full,guanica.full,powdermill.full,palo.full,maps.full)
+master.time <- master.time[grep(":",master.time$Time),]
+master.time$Time <- as.POSIXct(master.time$Time, format="%H:%M")
+master.time <- master.time[!master.time$Year<1900,]
+
+```
+```{r, echo=FALSE,message=FALSE}
+ggplot(master.time, aes(x=Year, y=Time)) +
+  theme_classic() +
+  geom_point(pch=1, na.rm = TRUE) +
+  geom_smooth(method="lm",color="black",linetype="dashed", na.rm=TRUE)
+```
+
+Doesn't seem like it! A model, just to be sure...
+
+```{r}
+master.time$yr.num <- as.numeric(master.time$Year)
+master.time$time.num <- as.numeric(master.time$Time)
+mod.time <- lm(time.num ~ yr.num, master.time) # summarize 
+mod.time.sum <- summary(mod.time) # summarize model
+mod.time.sum$adj.r.squared # r^2 value
+mod.time.sum$coefficients[2,4] # p-value
+```
+
+### Statistical analysis 
+
+Because we're interested in body size changes in species, and species are evolutionarily non-independent units, we're going to be analysing our data using phylogenetic multilevel models. This framework will allow us to include a varying intercept for each species, but dictate that these intercepts are dependent on an underlying phylogenetic distance matrix. We'll include the slope of temperature change, initial mass of each species, and latitude as predictors in the model, and weight by the number of years of data we have for each species. In familiar linear mixed model syntax (a la `lme4`), this looks something like this: 
+
+```{r, eval=FALSE}
+slope_mass | weights(no_years) ~ slope_temp + starting_mass + lat + (1|phylo)
+```
+We'll specify this models using the R package [`brms`](https://cran.r-project.org/web/packages/brms/index.html), which fits generalized (non-)linear multivariate multilevel models using an underlying software called `Stan` in a Bayesian framework. `brms` describes the posterior distribution of parameters using a Markov Chain Monte Carlo (MCMC) algorithm. This can be computationally intensive, so for now, we're going to fit three models with 5000 generations, discarding the first 2500 generations as warm-up (or "burnin"). We're interested in the sign associated with each parameter, and whether the 95% credible interval of the posterior distribution of those parameters intercepts with 0. This is of course an arbitrary cutoff—but can give us an idea of their uncertainty associated uncertainty. 
+
+First, we'll fit a model using our largest (sex-blind) dataset, which inlcudes 272 species. Here's what we find:
+```{r}
+mod1 <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/model_all_test.csv")
+head(mod1)
+```
+We won't take these results especially seriously as our chains haven't converged / our effective sample size is low, but they suggest the slope of temperature change has a negative relationship with body size, as we'd predict if bird bodies are getting smaller as the globe warms, but starting mass and latitude have real influence. 
+
+Next, we'll fit a model for male birds only, with 75 species:
+
+```{r}
+mod2 <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/model_m_test.csv")
+head(mod2)
+```
+In contrast, here we see no real signal. The sign of the parameter for slope of temperature change has flipped, but the 95% CI is huge and spans 0. This could be something biological, or related to loss of data, or (most likely) both. 
+
+Lastly, we'll fit a model for female birds only, with 67 species:
+
+```{r}
+mod3 <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/model_f_test.csv")
+head(mod3)
+```
+Strangely, female birds show a positive relationship with temperature change, with a reasonable amount of certainty. But again, these are results from models that haven't converged, so they are really just a demonstration of how we'll be analyzing the data once we figure out the kinks and can run them on a remote server for a long time. 
+
+We're anticipating displaying these results in a figure something like this, with body size color-coded on the branches of a circular phylogeny, paired with the posterior distributions of our parameters of interest. (We also hope to annotate the branches of the phylogeny with representative images of each family-level clade, and ID which species are predominantly tropical versus temperate.)
+
+```{r, message=FALSE, echo=FALSE, warning=FALSE}
+library(ggtree)
+library(cowplot)
+master.df <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/all_analysis_df.csv")
+master.slope <- cbind.data.frame(master.df$species, master.df$slope_mass)
+master.tree <- read.tree("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/all_analysis_phy.tree")
+p1 <- ggtree(master.tree, layout='circular') %<+% master.slope 
+p1$data$`master.df$slope_mass`[is.na(p1$data$`master.df$slope_mass`)] <- 0
+#p1$data$`master.df$slope_mass` <- (p1$data$`master.df$slope_mass`+ abs(min(p1$data$`master.df$slope_mass`)) + 0.0001)
+p2 <- ggtree(master.tree, layout='circular') %<+% master.slope + 
+  aes(color=I(log(p1$data$`master.df$slope_mass`)),guides="test") +
+  scale_colour_gradient2()
+mod1 <- mod1[1:4,]
+mod1$term <- c("intercept","slope_temp", "starting_mass","lat")
+p3 <- ggplot(mod1, aes(x=term, y=estimate, colour=term)) + 
+    theme_classic() +
+    geom_errorbar(aes(ymin=estimate-lower, ymax=estimate+upper), width=.1) +
+    geom_line() +
+    geom_point(pch=1,size=3) +
+    ylim(-4,1) +
+    theme(axis.text.x=element_blank())
+plot_grid(p2,p3, rel_heights = c(0.8,0.2), rel_widths = c(0.55,0.45))
+
+```
