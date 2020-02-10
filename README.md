@@ -16,9 +16,9 @@
 
 `05_plotting.R:` generated plots in `plots/` subdirectory     
 
-`preliminary_results.pdf:` digital notebook of early results for prelim collaborator meeting   
+`analysis_notebook.pdf:` digital notebook of results
 
-`preliminary_results.Rmd:` underlying Rmarkdown document for the prelim collaborator meeting  
+`analysis_notebook.Rmd:` underlying Rmarkdown document for notebook 
 
 (in `plots/` subdirectory)   
 
