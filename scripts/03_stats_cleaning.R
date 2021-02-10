@@ -7,7 +7,7 @@ source("~/Dropbox/Bird_body_size-analysis/bird_body_size/scripts/00_functions.R"
 # load temp data
 temp.df <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/temp_data.csv")
 regexp <- "[[:digit:]]+" #regex to extract year from column names
-colnames(temp.df) <- c("site",str_extract(colnames(temp.df), regexp)[-1]) #rename columns
+colnames(temp.df) <- c("site", str_extract(colnames(temp.df), regexp)[-1]) #rename columns
 site <- as.vector(as.character(temp.df$site))
 
 # load precip data
@@ -20,9 +20,10 @@ site <- as.vector(as.character(precip.df$site))
 latlong.df <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/latlong.csv")
 
 # calculate annual mean
+temp.df <- subset(temp.df, select = -c(site))
 x <- as.data.frame(temp.df)
-temp.df <- as.data.frame(lapply(split(as.list(x),f = colnames(x)),function(x) Reduce(`+`,x) / length(x)))
-temp.df <- subset(temp.df, select = -c(site) )
+temp.df <- as.data.frame(lapply(split(as.list(x),f = colnames(x)),
+                                function(x) Reduce(`+`,x) / length(x)))
 temp.df <- cbind.data.frame(site,temp.df)
 
 # transpose 
@@ -40,9 +41,11 @@ temp.df$year <- str_extract(temp.df$year, regexp) #rename columns
 temp.df$year <- as.numeric(temp.df$year)
 
 # calculate annual mean
+precip.df <- subset(precip.df, select = -c(site))
 x <- as.data.frame(precip.df)
-precip.df <- as.data.frame(lapply(split(as.list(x),f = colnames(x)),function(x) Reduce(`+`,x) / length(x)))
-precip.df <- subset(precip.df, select = -c(site) )
+precip.df <- as.data.frame(lapply(split(as.list(x),
+                                        f = colnames(x)),
+                                  function(x) Reduce(`+`, x) / length(x)))
 precip.df <- cbind.data.frame(site,precip.df)
 
 # transpose 
@@ -66,7 +69,7 @@ precip.df$year <- as.numeric(precip.df$year)
 # write.tree(supertree, "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/birds_mcc.tre")
 
 # load MCC tree
-supertree <-read.tree("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/birds_mcc.tre")
+supertree <- read.tree("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/birds_mcc.tre")
 supertree.species <- supertree$tip.label # save vector of species names
 
 # run dataframe function for Brazil, sex-blind
@@ -202,7 +205,6 @@ write.csv(master.females.df, "~/Dropbox/Bird_body_size-analysis/bird_body_size/d
 write.csv(powdermill.df, "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/powdermill_analysis_df.csv")
 write.csv(palo.df, "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/palo_analysis_df.csv") 
 
-
 # clean up taxonomy (see 00_functions.R for details)
 clean_taxonomy(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/all_analysis_df.csv",
                output_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/all_analysis_df.csv")
@@ -223,11 +225,11 @@ powdermill.df <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data
 palo.df <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/palo_analysis_df.csv",stringsAsFactors = FALSE)
 
 # drop species in more than one site from all subsequent sites after the first
-master.df <- master.df %>% group_by(species) %>% filter(row_number() == 1)
-master.males.df <- master.males.df %>% group_by(species) %>% filter(row_number() == 1)
-master.females.df <- master.females.df %>% group_by(species) %>% filter(row_number() == 1)
-powdermill.df <- powdermill.df %>% group_by(species) %>% filter(row_number() == 1)
-palo.df <- palo.df %>% group_by(species) %>% filter(row_number() == 1)
+# master.df <- master.df %>% group_by(species) %>% filter(row_number() == 1)
+# master.males.df <- master.males.df %>% group_by(species) %>% filter(row_number() == 1)
+# master.females.df <- master.females.df %>% group_by(species) %>% filter(row_number() == 1)
+# powdermill.df <- powdermill.df %>% group_by(species) %>% filter(row_number() == 1)
+# palo.df <- palo.df %>% group_by(species) %>% filter(row_number() == 1)
 
 # rewrite to csv
 write.csv(master.df, "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/all_analysis_df.csv")
@@ -235,7 +237,6 @@ write.csv(master.males.df, "~/Dropbox/Bird_body_size-analysis/bird_body_size/dat
 write.csv(master.females.df, "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/f_analysis_df.csv")
 write.csv(powdermill.df, "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/powdermill_analysis_df.csv")
 write.csv(palo.df, "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/palo_analysis_df.csv")
-
 
 # keep only tips in dataset
 master.tree <- keep.tip(supertree, master.df$species)
@@ -248,7 +249,9 @@ powdermill.tree <- keep.tip(supertree, powdermill.df$species)
 write.tree(powdermill.tree, "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/p_analysis_phy.tree")
 palo.tree <- keep.tip(supertree, palo.df$species)
 write.tree(palo.tree, "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/palo_analysis_phy.tree")
-
+sex.species <- union(master.males.df$species, master.females.df$species)
+sex.tree <- keep.tip(supertree, sex.species)
+write.tree(sex.tree, "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/sex_analysis_phy.tree")
 
 # run dataframe function for Brazil, sex-blind, wing length data
 make_stats_wl(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/brazil_filtered.csv", site_name="Brazil", output_path = 
@@ -291,11 +294,11 @@ wate.wl.df <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/wa
 master.wl.df <- rbind.data.frame(brazil.wl.df, panama.wl.df, guanica.wl.df, palo.wl.df, tss.wl.df, powdermill.wl.df)
 
 # drop species in more than one site from all subsequent sites after the first
-master.wl.df <- master.wl.df %>% group_by(species) %>% filter(row_number() == 1)
+# master.wl.df <- master.wl.df %>% group_by(species) %>% filter(row_number() == 1)
 
 # check correlation
 wl.mod <- lm(slope_wl ~ slope_mass, master.wl.df)
-summary(wl.mod) #p-value: 0.6281, Adjusted R-squared:  -0.002962 
+summary(wl.mod) #p-value: 0.4541, Adjusted R-squared:  -0.001534 
 
 # write data for plotting
 write.csv(master.wl.df, "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/master.wl.df")
@@ -337,12 +340,27 @@ palomarin.tarsus.df <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_siz
 master.tarsus.df <- rbind.data.frame(panama.tarsus.df, guanica.tarsus.df, palomarin.tarsus.df)
 
 # drop species in more than one site from all subsequent sites after the first
-master.tarsus.df <- master.tarsus.df %>% group_by(species) %>% filter(row_number() == 1)
+# master.tarsus.df <- master.tarsus.df %>% group_by(species) %>% filter(row_number() == 1)
 
 # check correlation
 tarsus.mod <- lm(slope_tarsus ~ slope_mass, master.tarsus.df)
-summary(tarsus.mod) #p-value: 0.4185, Adjusted R-squared: -0.003161  
+summary(tarsus.mod) #p-value: 0.4509, Adjusted R-squared:  -0.004465   
 
-# write data for plotting
-write.csv(master.tarsus.df, "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/master.tarsus.df")
+# replace space in species names with underscore
+master.tarsus.df$species <- sub(" ", "_", master.tarsus.df$species) # replace space with underscore
+
+# write data 
+write.csv(master.tarsus.df, "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/tarsus_analysis_df.csv")
+
+# clean taxonomy
+clean_taxonomy(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/tarsus_analysis_df.csv",
+               output_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/tarsus_analysis_df.csv")
+
+# reload data
+master.tarsus.df <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/tarsus_analysis_df.csv")
+
+# prune tree
+tarsus.tree <- keep.tip(supertree, master.tarsus.df$species)
+write.tree(tarsus.tree, "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/tarsus_analysis_phy.tree")
+
 

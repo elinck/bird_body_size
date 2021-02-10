@@ -1,13 +1,41 @@
 # function to load and clean data
-clean_data <- function(file_path, output_path, drop_juveniles=FALSE, sex=c("MALES","FEMALES","ALL"), 
-                       climate=c("TEMPERATE","TROPICAL"), s_dev=4){
+clean_data <- function(file_path, output_path, drop_juveniles=FALSE, drop_frags=FALSE,
+                       sex=c("MALES","FEMALES","ALL"), 
+                       climate=c("TEMPERATE","TROPICAL"), 
+                       brazil=FALSE,
+                       s_dev=4){
+  
+  # required package
+  require(lubridate)
   
   # load data data
   data.full <- read.csv(file_path, stringsAsFactors = FALSE, fileEncoding="latin1") 
   
   # subset to relevant columns
-  data.df <- data.full[,c("Updated.Scientific.Name","Month","Year","Band.Number",
-                          "Sex","Age","Mass","Wing.Length","Tarsus")]
+  if (climate=="TROPICAL" & brazil==FALSE){data.df <- data.full[,c("Updated.Scientific.Name","Month","Year","Band.Number",
+                          "Sex","Age","Mass","Wing.Length","Tarsus","Migratory.Status")]}
+  if (climate=="TROPICAL" & brazil==TRUE){data.df <- data.full[,c("Updated.Scientific.Name","Month","Year","Band.Number",
+                                                                   "Sex","Age","Mass","Wing.Length","Tarsus","Migratory.Status","Date","Reserve.Code")]}
+  if (climate=="TEMPERATE"){data.df <- data.full[,c("Updated.Scientific.Name","Month","Year","Band.Number",
+                                                   "Sex","Age","Mass","Wing.Length","Tarsus")]}
+  
+  # drop non-primary forest sites in Brazil
+  if (brazil==TRUE & drop_frags==TRUE){
+    
+    # Convert date to "date" using the package 'lubridate'
+    data.df$Date <- mdy(data.df$Date)
+    
+    # Remove all dates before 2007 and after 2017
+    # data.df <- data.df %>% filter(Date >= "2007-01-01")
+    # data.df <- data.df %>% filter(Date <= "2017-12-31")
+    
+    # Convert reserves to factor and then preserve only those that are from primary forest (below)
+    data.df$Reserve.Code <- as.factor(data.df$Reserve.Code)
+    
+    # Create a vector of the recent primary forest reserves
+    reserves <- c("37","1001","1301","1501","1511","2501","3402","3501","3512") # 9 primary forest reserves
+    data.df <- data.df[data.df$Reserve.Code %in% reserves, ] 
+  }
   
   # deal with factor issues
   data.df$Band.Number <- as.numeric(as.character(data.df$Band.Number))
@@ -30,7 +58,7 @@ clean_data <- function(file_path, output_path, drop_juveniles=FALSE, sex=c("MALE
   if (sex=="FEMALES") {data.df <- data.df[data.df$Sex=="F",]}  
   
   # select climate category
-  if (climate=="TROPICAL") {data.df <- data.df} 
+  if (climate=="TROPICAL") {data.df <- data.df[data.df$Migratory.Status=="non",]} 
   if (climate=="TEMPERATE") {data.df <- data.df[data.df$Month %in% c(6,7),]}
   
   # order by month and year, drop bad data
@@ -119,6 +147,11 @@ make_stats_df <- function(file_path, site_name, output_path){
     n <- nrow(tmp) # get sample size
     n.years <- length(unique(tmp$year)) # get number of years
     min.year <- min(tmp$year)
+    max.year <- max(tmp$year)
+    start.temp <- tmp[tmp$year==min.year,]$MAT %>% mean()
+    end.temp <- tmp[tmp$year==max.year,]$MAT %>% mean()
+    start.precip <- tmp[tmp$year==min.year,]$MAP %>% mean()
+    end.precip <- tmp[tmp$year==max.year,]$MAP %>% mean()
     mass.start <- mean(tmp[tmp$year==min.year,]$mass) # average mass for starting year
     mod.mass <- lm(mass ~ year, tmp) # simple regression for mass change
     mod.mass.sum <- summary(mod.mass)
@@ -133,14 +166,19 @@ make_stats_df <- function(file_path, site_name, output_path){
     mod.precip.sum <- summary(mod.precip)
     slope.precip <- mod.precip.sum$coefficients[2,1] # get temp slope
     r2.precip <- mod.precip.sum$r.squared # get temp r-squared
-    data.delta[[i]] <- cbind.data.frame(i,n,n.years,slope.mass,r2.mass,se.mass,slope.temp,r2.temp,slope.precip,r2.precip,mass.start)
+    data.delta[[i]] <- cbind.data.frame(i,n,n.years,slope.mass,r2.mass,se.mass,slope.temp,
+                                        r2.temp,slope.precip,r2.precip,mass.start,
+                                        min.year,max.year,
+                                        start.temp,end.temp,
+                                        start.precip,end.precip)
   }
   
   # assemble dataframe
   data.mass.df <- do.call(rbind, data.delta)
   rownames(data.mass.df) <- NULL
   colnames(data.mass.df) <- c("species","sample_size","no_years","slope_mass","variance_mass","se_mass","slope_temp", "variance_temp",
-                              "slope_precip", "variance_precip","starting_mass")
+                              "slope_precip", "variance_precip","starting_mass","starting_year","ending_year",
+                              "starting_temp","ending_temp","starting_precip","ending_precip")
   data.mass.df$lat <- rep(latlong.df[latlong.df$site==site_name,]$lat, nrow(data.mass.df))
   data.mass.df$long <- rep(latlong.df[latlong.df$site==site_name,]$long, nrow(data.mass.df))
   
@@ -239,18 +277,24 @@ make_stats_tarsus <- function(file_path, site_name, output_path){
     mod.temp.sum <- summary(mod.temp)
     slope.temp <- mod.temp.sum$coefficients[2,1] # get temp slope
     r2.temp <- mod.temp.sum$r.squared # get temp r-squared
+    mod.precip <- lm(MAP ~ year, tmp) # simple regression for temp change
+    mod.precip.sum <- summary(mod.precip)
+    slope.precip <- mod.precip.sum$coefficients[2,1] # get temp slope
+    r2.precip <- mod.precip.sum$r.squared # get temp r-squared
     mod.tarsus <- lm(tarsus ~ year, tmp) # simple regression for wing length change
     mod.tarsus.sum <- summary(mod.tarsus)
     slope.tarsus <- mod.tarsus.sum$coefficients[2,1] # get mass slope
     r2.tarsus <- mod.tarsus.sum$r.squared # get mass r-squared
-    data.delta[[i]] <- cbind.data.frame(i,n,n.years,slope.mass,r2.mass,se.mass,slope.temp,r2.temp,mass.start,slope.tarsus,r2.tarsus)
+    se.tarsus <- mod.tarsus.sum$r.squared # get mass r-squared
+    data.delta[[i]] <- cbind.data.frame(i,n,n.years,slope.mass,r2.mass,se.mass,slope.temp,r2.temp,slope.precip,
+                                        r2.precip,mass.start,slope.tarsus,r2.tarsus,se.tarsus)
   }
   
   # assemble dataframe
   data.tarsus.df <- do.call(rbind, data.delta)
   rownames(data.tarsus.df) <- NULL
-  colnames(data.tarsus.df) <- c("species","sample_size","no_years","slope_mass","variance_mass","se_mass","slope_temp", "variance_temp",
-                              "starting_mass","slope_tarsus","variance_tarsus")
+  colnames(data.tarsus.df) <- c("species","sample_size","no_years","slope_mass","variance_mass","se_mass","slope_temp","variance_temp",
+                              "slope_precip","variance_precip","starting_mass","slope_tarsus","variance_tarsus","se_tarsus")
   data.tarsus.df$lat <- rep(latlong.df[latlong.df$site==site_name,]$lat, nrow(data.tarsus.df))
   data.tarsus.df$long <- rep(latlong.df[latlong.df$site==site_name,]$long, nrow(data.tarsus.df))
   
@@ -375,8 +419,103 @@ clean_taxonomy <- function(file_path, output_path){
   if("Coereba_flaveola " %in% input_obj$species==TRUE) {input_obj[grep("Coereba_flaveola ",input_obj$species),]$species <-"Coereba_flaveola" }
   if("Picoides_villosus " %in% input_obj$species==TRUE) {input_obj[grep("Picoides_villosus",input_obj$species),]$species <-"Picoides_villosus" }
   if("Hirundo_rustica " %in% input_obj$species==TRUE) {input_obj[grep("Hirundo_rustica",input_obj$species),]$species <-"Hirundo_rustica" }
+  if("Colaptes_a._cafer" %in% input_obj$species==TRUE) {input_obj[grep("Colaptes_a._cafer",input_obj$species),]$species <-"Colaptes_auratus" }
+  if("Zonotrichia_l._nuttalli" %in% input_obj$species==TRUE) {input_obj[grep("Zonotrichia_l._nuttalli",input_obj$species),]$species <-"Zonotrichia_leucophrys" }
+  if("Junco_h._oregonus" %in% input_obj$species==TRUE) {input_obj[grep("Junco_h._oregonus",input_obj$species),]$species <-"Junco_hyemalis" }
+  
   
   # write to file
   write.csv(input_obj, output_path)
+}
+
+temp_change <- function(file_path, site_name, output_path){
+  
+  # required packages
+  require(stringr, tidyverse)
+  
+  # load temp data
+  temp.df <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/temp_data.csv")
+  regexp <- "[[:digit:]]+" #regex to extract year from column names
+  colnames(temp.df) <- c("site", str_extract(colnames(temp.df), regexp)[-1]) #rename columns
+  site <- as.vector(as.character(temp.df$site))
+
+  # calculate annual mean
+  temp.df <- subset(temp.df, select = -c(site))
+  x <- as.data.frame(temp.df)
+  temp.df <- as.data.frame(lapply(split(as.list(x),f = colnames(x)),
+                                  function(x) Reduce(`+`,x) / length(x)))
+  temp.df <- cbind.data.frame(site,temp.df)
+  
+  # transpose 
+  temp.df <- temp.df %>%
+    rownames_to_column %>% 
+    gather(var, value, -rowname) %>% 
+    spread(rowname, value) 
+  cols <- temp.df[1,]
+  cols[1] <- "year"
+  rownames(temp.df) <- NULL
+  colnames(temp.df) <- NULL
+  temp.df <- temp.df[-1,]
+  colnames(temp.df) <- cols
+  temp.df$year <- str_extract(temp.df$year, regexp) #rename columns
+
+  
+  # load data 
+  data.all <- read.csv(file = file_path, fileEncoding="latin1")[-1]
+  
+  # subset temp and precip data, merge with df
+  data.temps <- cbind.data.frame(temp.df$year, temp.df[,colnames(temp.df)==site_name])
+  colnames(data.temps) <- c("year", "MAT")
+  data.temps$MAT <- as.numeric(as.character(data.temps$MAT))
+  data.all <- merge(data.all, data.temps, by.x="year", by.y="year", all.y=FALSE)
+  
+  # export file
+  write.csv(data.all, output_path)
+  
+}
+
+precip_change <- function(file_path, site_name, output_path){
+  
+  # required packages
+  require(stringr, tidyverse)
+  
+  # load precip data
+  precip.df <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/precip_data.csv")
+  regexp <- "[[:digit:]]+" #regex to extract year from column names
+  colnames(precip.df) <- c("site", str_extract(colnames(precip.df), regexp)[-1]) #rename columns
+  site <- as.vector(as.character(precip.df$site))
+  
+  # calculate annual mean
+  precip.df <- subset(precip.df, select = -c(site))
+  x <- as.data.frame(precip.df)
+  precip.df <- as.data.frame(lapply(split(as.list(x),f = colnames(x)),
+                                    function(x) Reduce(`+`,x) / length(x)))
+  precip.df <- cbind.data.frame(site,precip.df)
+  
+  # transpose 
+  precip.df <- precip.df %>%
+    rownames_to_column %>% 
+    gather(var, value, -rowname) %>% 
+    spread(rowname, value) 
+  cols <- precip.df[1,]
+  cols[1] <- "year"
+  rownames(precip.df) <- NULL
+  colnames(precip.df) <- NULL
+  precip.df <- precip.df[-1,]
+  colnames(precip.df) <- cols
+  precip.df$year <- str_extract(precip.df$year, regexp) #rename columns
+  
+  # load data 
+  data.all <- read.csv(file = file_path, fileEncoding="latin1")[-1]
+  
+  # subset precip and precip data, merge with df
+  data.precips <- cbind.data.frame(precip.df$year, precip.df[,colnames(precip.df)==site_name])
+  colnames(data.precips) <- c("year", "MAT")
+  data.precips$MAT <- as.numeric(as.character(data.precips$MAT))
+  data.all <- merge(data.all, data.precips, by.x="year", by.y="year", all.y=FALSE)
+  
+  # export file
+  write.csv(data.all, output_path)
+  
 }
 

@@ -280,7 +280,7 @@ brazil.full <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/b
 panama.full <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/panama_raw.csv") 
 guanica.full <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/guanica_raw.csv") 
 powdermill.full <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/powdermill_raw.csv")
-palo.full <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/powdermill_raw.csv")
+palo.full <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/palo_raw.csv")
 maps.full <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/maps_raw.csv")
 tss.full <- maps.full[maps.full$Data.Set=="TSS",]
 wate.full <- maps.full[maps.full$Data.Set=="WATE",]
@@ -308,7 +308,6 @@ guanica.full <- master.time[master.time$site=="Guanica",]
 palo.full <- master.time[master.time$site=="Palomarin",]
 panama.full <- master.time[master.time$site=="Panama",]
 powdermill.full <- master.time[master.time$site=="Powdermill",]
-
 ```
 
 
@@ -580,7 +579,7 @@ SE5 <-setNames(powdermill.df$se_mass, powdermill.tree$tip.label)
 fit5<-pgls.SEy(slope_mass ~ slope_temp + slope_precip + starting_mass, 
                data=X5, se=SE5, tree=powdermill.tree, method="ML")
 
-fit5.sum <- summary(fit5)
+summary(fit5)
 ```
 
 So, no effect! Let's chat about this, but in some ways it isn't suprising. 

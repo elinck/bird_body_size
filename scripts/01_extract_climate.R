@@ -6,8 +6,6 @@ library(raster)
 temp <- nc_open("C:\\Users\\Xingli Giam\\Downloads\\air.mon.mean.v501.nc")
 tempbrick <- brick("C:\\Users\\Xingli Giam\\Downloads\\air.mon.mean.v501.nc")
 
-
-
 ## extract layers from 1959
 tempbrick1<-tempbrick[[709:1416]]
 tempbrick1.rotated <- rotate(tempbrick1)
