@@ -552,7 +552,7 @@ p2
 dev.off()
 
   
-mod1 <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/stats_with_fragments/m4.combined.old.csv")
+mod1 <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/stats_with_fragments/m4.combined.csv")
 mod1$term <- mod1$term %>% as.factor()  
 mod1$term <- mod1$term %>% recode(intercept="Intercept",
                                   `scale(starting_mass, scale = F)`="Starting Mass",
@@ -579,7 +579,7 @@ p3 <- ggplot(mod1, aes(x=term, y=estimate, color=term)) +
   #                   labels = modlabs) +
   # theme(legend.position = "bottom")
 
-pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/figure_1_components/betas.pdf", width=4, height=3)
+pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/figure_1_components/betas.pdf", width=5, height=3)
 p3
 dev.off()
 
