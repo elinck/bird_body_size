@@ -677,7 +677,7 @@ temp1 <- ggplot(data=temp_df, aes(year, MAT, color=species))+
   theme_bw() +
   theme(legend.position="none",
         strip.background = element_blank()) +
-  ylab("mean annual temperature (C°)") +
+  ylab("mean annual temperature (°C)") +
   geom_smooth(method='lm', se = FALSE) +
   facet_wrap(~site, scales="free_y")
 
