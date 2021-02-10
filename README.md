@@ -1,6 +1,6 @@
 # Analyses for Sheldon et al. *in prep*
 
-### Scripts  
+### Contents
 
 (in `scripts/` subdirectory)  
 
@@ -20,7 +20,7 @@
 
 `analysis_notebook.Rmd:` underlying Rmarkdown document for notebook 
 
-(in `plots/` subdirectory)   
+(in `species_plots/` subdirectory)   
 
 `*all.png:` plots of trends lumping males and females   
 
