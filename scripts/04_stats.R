@@ -31,6 +31,7 @@ master.df$SITE[master.df$lat %in% unique(master.df$lat)[3]] <- 'C'
 master.df$SITE[master.df$lat %in% unique(master.df$lat)[4]] <- 'D'
 master.df$SITE[master.df$lat %in% unique(master.df$lat)[5]] <- 'E'
 master.df$SITE[master.df$lat %in% unique(master.df$lat)[6]] <- 'F'
+master.df$SITE[master.df$lat %in% unique(master.df$lat)[7]] <- 'G'
 
 male.df$SITE[male.df$lat %in% unique(male.df$lat)[1]] <- 'A'
 male.df$SITE[male.df$lat %in% unique(male.df$lat)[2]] <- 'B'
@@ -38,6 +39,7 @@ male.df$SITE[male.df$lat %in% unique(male.df$lat)[3]] <- 'C'
 male.df$SITE[male.df$lat %in% unique(male.df$lat)[4]] <- 'D'
 male.df$SITE[male.df$lat %in% unique(male.df$lat)[5]] <- 'E'
 male.df$SITE[male.df$lat %in% unique(male.df$lat)[6]] <- 'F'
+male.df$SITE[male.df$lat %in% unique(male.df$lat)[7]] <- 'G'
 
 female.df$SITE[female.df$lat %in% unique(female.df$lat)[1]] <- 'A'
 female.df$SITE[female.df$lat %in% unique(female.df$lat)[2]] <- 'B'
@@ -45,6 +47,7 @@ female.df$SITE[female.df$lat %in% unique(female.df$lat)[3]] <- 'C'
 female.df$SITE[female.df$lat %in% unique(female.df$lat)[4]] <- 'D'
 female.df$SITE[female.df$lat %in% unique(female.df$lat)[5]] <- 'E'
 female.df$SITE[female.df$lat %in% unique(female.df$lat)[6]] <- 'F'
+female.df$SITE[female.df$lat %in% unique(female.df$lat)[7]] <- 'G'
 
 ## models w/o phylogeny
 m1.all <- rma.mv(yi = slope_mass, V = se_mass^2, random = list(~1 | species), method="REML", data=master.df, control=list(optimizer="optim"))
@@ -238,7 +241,7 @@ null.E <- rma.mv(yi = slope_mass,
                  data=data.E, 
                  control=list(optimizer="optim"))
 
-# waterfall glen
+# powdermill
 data.F <- master.df[master.df$SITE=="F",]
 species.F <- data.F$species
 tree.F <- keep.tip(master.tree, species.F)
@@ -252,6 +255,21 @@ null.F <- rma.mv(yi = slope_mass,
                  data=data.F, 
                  control=list(optimizer="optim"))
 
+# waterfall glen
+data.G <- master.df[master.df$SITE=="G",]
+species.G <- data.G$species
+tree.G <- keep.tip(master.tree, species.G)
+tree.G.length <- compute.brlen(tree.G)
+cor.G <- vcv(tree.G.length, cor = T)
+null.G <- rma.mv(yi = slope_mass, 
+                 V = se_mass^2, 
+                 random = list(~1 | species), 
+                 R = list(species = cor.G),
+                 method="REML", 
+                 data=data.G, 
+                 control=list(optimizer="optim"))
+
+
 # make df
 row1 <- cbind.data.frame("brazil", as.numeric(null.A$beta), as.numeric(null.A$ci.lb), as.numeric(null.A$ci.ub))
 colnames(row1) <- c("site", "intercept", "lb", "ub")
@@ -263,19 +281,21 @@ row4 <- cbind.data.frame("palomarin", as.numeric(null.D$beta), as.numeric(null.D
 colnames(row4) <- c("site", "intercept", "lb", "ub")
 row5 <- cbind.data.frame("teton science school", as.numeric(null.E$beta), as.numeric(null.E$ci.lb), as.numeric(null.E$ci.ub))
 colnames(row5) <- c("site", "intercept", "lb", "ub")
-row6 <- cbind.data.frame("waterfall glen", as.numeric(null.F$beta), as.numeric(null.F$ci.lb), as.numeric(null.F$ci.ub))
+row6 <- cbind.data.frame("powdermill", as.numeric(null.F$beta), as.numeric(null.F$ci.lb), as.numeric(null.F$ci.ub))
 colnames(row6) <- c("site", "intercept", "lb", "ub")
-intercept.df <- rbind.data.frame(row1,row2,row3,row4,row5,row6)
+row7 <- cbind.data.frame("waterfall glen", as.numeric(null.G$beta), as.numeric(null.G$ci.lb), as.numeric(null.G$ci.ub))
+colnames(row7) <- c("site", "intercept", "lb", "ub")
+intercept.df <- rbind.data.frame(row1,row2,row3,row4,row5,row6,row7)
 
 # write to file
 write.csv(intercept.df, "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/site_intercept.csv")
 
 # data summary
-nrow(master.df) # 287 total records
-master.df$species %>% unique() %>% length() # 239 unique species
-nrow(male.df) # 150 total records
+nrow(master.df) # 294 total records
+master.df$species %>% unique() %>% length() # 240 unique species
+nrow(male.df) # 153 total records
 male.df$species %>% unique() %>% length() # 123 unique species
-nrow(female.df) # 170 total records
+nrow(female.df) # 173 total records
 female.df$species %>% unique() %>% length() # 142 unique species
-nrow(combined.df) # 320 total records
+nrow(combined.df) # 326 total records
 combined.df$species %>% unique() %>% length() # 149 unique species

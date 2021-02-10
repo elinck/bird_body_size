@@ -601,7 +601,6 @@ pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/figure_1_component
 p4
 dev.off()
 
-
 # site-specific intercept plot
 intercept.df <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/site_intercept.csv")[-1]
 s5 <- ggplot(intercept.df, aes(x=site, y=intercept, color=site)) + 

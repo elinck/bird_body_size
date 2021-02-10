@@ -180,15 +180,15 @@ tss.females.df <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/dat
 wate.females.df <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/wate_stats_females.csv")
 
 # merge sex-blind dataframes
-master.df <- rbind.data.frame(brazil.df, panama.df, guanica.df, palo.df, tss.df, powdermill.df)
+master.df <- rbind.data.frame(brazil.df, panama.df, guanica.df, palo.df, tss.df, powdermill.df, wate.df)
 species.count <- as.data.frame(table(master.df$species)) # get table of records
 
 # merge males dataframes
-master.males.df <- rbind.data.frame(brazil.males.df, panama.males.df, guanica.males.df, palo.males.df, tss.males.df, powdermill.males.df)
+master.males.df <- rbind.data.frame(brazil.males.df, panama.males.df, guanica.males.df, palo.males.df, tss.males.df, powdermill.males.df, wate.males.df)
 species.count.males <- as.data.frame(table(master.males.df$species)) # get table of records
 
 # merge female dataframes
-master.females.df <- rbind.data.frame(brazil.females.df, panama.females.df, guanica.females.df, palo.females.df, tss.females.df, powdermill.females.df)
+master.females.df <- rbind.data.frame(brazil.females.df, panama.females.df, guanica.females.df, palo.females.df, tss.females.df, powdermill.females.df, wate.females.df)
 species.count.females <- as.data.frame(table(master.females.df$species)) # get table of records
 
 # clean ids
