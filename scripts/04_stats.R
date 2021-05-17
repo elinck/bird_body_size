@@ -168,127 +168,27 @@ m4.combined_centered.write$ci.lb <- m4.combined_SMass_centered$ci.lb
 m4.combined_centered.write$ci.ub <- m4.combined_SMass_centered$ci.ub
 write_csv(m4.combined_centered.write, "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/stats_with_fragments/m4.combined.csv")
 
-## null models
+# combined sexes, no interaction 
+m5.combined_SMass_centered <- rma.mv(yi = slope_mass, V = se_mass^2,
+                                     mods = ~scale(starting_mass,scale=F) + Sex + slope_precip + tropical + slope_temp,
+                                     random = list(~1 | SITE, ~1 | species), R = list(species = cor),
+                                     method="REML", data=combined.df)				
 
-# brazil
-data.A <- master.df[master.df$SITE=="A",]
-species.A <- data.A$species
-tree.A <- keep.tip(master.tree, species.A)
-tree.A.length <- compute.brlen(tree.A)
-cor.A <- vcv(tree.A.length, cor = T)
-null.A <- rma.mv(yi = slope_mass, 
-                 V = se_mass^2, 
-                 random = list(~1 | species), 
-                 R = list(species = cor.A),
-                 method="REML", 
-                 data=data.A, 
-                 control=list(optimizer="optim"))
+m5.combined.write <- tidy(m5.combined_SMass_centered)
+m5.combined.write$ci.lb <- m5.combined_SMass_centered$ci.lb
+m5.combined.write$ci.ub <- m5.combined_SMass_centered$ci.ub
+write_csv(m5.combined.write, "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/stats_with_fragments/m5.combined.csv")
 
+# combined sexes, interaction but not constituent terms: this is the model we focus on in the manuscript!
+m6.combined_SMass_centered <- rma.mv(yi = slope_mass, V = se_mass^2,
+                                     mods = ~scale(starting_mass,scale=F) + Sex + slope_precip + slope_temp + abs(lat):slope_temp,
+                                     random = list(~1 | SITE, ~1 | species), R = list(species = cor),
+                                     method="REML", data=combined.df)				
 
-# panama
-data.B <- master.df[master.df$SITE=="B",]
-species.B <- data.B$species
-tree.B <- keep.tip(master.tree, species.B)
-tree.B.length <- compute.brlen(tree.B)
-cor.B <- vcv(tree.B.length, cor = T)
-null.B <- rma.mv(yi = slope_mass, 
-                 V = se_mass^2, 
-                 random = list(~1 | species), 
-                 R = list(species = cor.B),
-                 method="REML", 
-                 data=data.B, 
-                 control=list(optimizer="optim"))
-
-# guanica
-data.C <- master.df[master.df$SITE=="C",]
-species.C <- data.C$species
-tree.C <- keep.tip(master.tree, species.C)
-tree.C.length <- compute.brlen(tree.C)
-cor.C <- vcv(tree.C.length, cor = T)
-null.C <- rma.mv(yi = slope_mass, 
-                 V = se_mass^2, 
-                 random = list(~1 | species), 
-                 R = list(species = cor.C),
-                 method="REML", 
-                 data=data.C, 
-                 control=list(optimizer="optim"))
-
-# palomarin
-data.D <- master.df[master.df$SITE=="D",]
-species.D <- data.D$species
-tree.D <- keep.tip(master.tree, species.D)
-tree.D.length <- compute.brlen(tree.D)
-cor.D <- vcv(tree.D.length, cor = T)
-null.D <- rma.mv(yi = slope_mass, 
-                 V = se_mass^2, 
-                 random = list(~1 | species), 
-                 R = list(species = cor.D),
-                 method="REML", 
-                 data=data.D, 
-                 control=list(optimizer="optim"))
-
-# teton science school
-data.E <- master.df[master.df$SITE=="E",]
-species.E <- data.E$species
-tree.E <- keep.tip(master.tree, species.E)
-tree.E.length <- compute.brlen(tree.E)
-cor.E <- vcv(tree.E.length, cor = T)
-null.E <- rma.mv(yi = slope_mass, 
-                 V = se_mass^2, 
-                 random = list(~1 | species), 
-                 R = list(species = cor.E),
-                 method="REML", 
-                 data=data.E, 
-                 control=list(optimizer="optim"))
-
-# powdermill
-data.F <- master.df[master.df$SITE=="F",]
-species.F <- data.F$species
-tree.F <- keep.tip(master.tree, species.F)
-tree.F.length <- compute.brlen(tree.F)
-cor.F <- vcv(tree.F.length, cor = T)
-null.F <- rma.mv(yi = slope_mass, 
-                 V = se_mass^2, 
-                 random = list(~1 | species), 
-                 R = list(species = cor.F),
-                 method="REML", 
-                 data=data.F, 
-                 control=list(optimizer="optim"))
-
-# waterfall glen
-data.G <- master.df[master.df$SITE=="G",]
-species.G <- data.G$species
-tree.G <- keep.tip(master.tree, species.G)
-tree.G.length <- compute.brlen(tree.G)
-cor.G <- vcv(tree.G.length, cor = T)
-null.G <- rma.mv(yi = slope_mass, 
-                 V = se_mass^2, 
-                 random = list(~1 | species), 
-                 R = list(species = cor.G),
-                 method="REML", 
-                 data=data.G, 
-                 control=list(optimizer="optim"))
-
-
-# make df
-row1 <- cbind.data.frame("brazil", as.numeric(null.A$beta), as.numeric(null.A$ci.lb), as.numeric(null.A$ci.ub))
-colnames(row1) <- c("site", "intercept", "lb", "ub")
-row2 <- cbind.data.frame("panama", as.numeric(null.B$beta), as.numeric(null.B$ci.lb), as.numeric(null.B$ci.ub))
-colnames(row2) <- c("site", "intercept", "lb", "ub")
-row3 <- cbind.data.frame("guanica", as.numeric(null.C$beta), as.numeric(null.C$ci.lb), as.numeric(null.C$ci.ub))
-colnames(row3) <- c("site", "intercept", "lb", "ub")
-row4 <- cbind.data.frame("palomarin", as.numeric(null.D$beta), as.numeric(null.D$ci.lb), as.numeric(null.D$ci.ub))
-colnames(row4) <- c("site", "intercept", "lb", "ub")
-row5 <- cbind.data.frame("teton science school", as.numeric(null.E$beta), as.numeric(null.E$ci.lb), as.numeric(null.E$ci.ub))
-colnames(row5) <- c("site", "intercept", "lb", "ub")
-row6 <- cbind.data.frame("powdermill", as.numeric(null.F$beta), as.numeric(null.F$ci.lb), as.numeric(null.F$ci.ub))
-colnames(row6) <- c("site", "intercept", "lb", "ub")
-row7 <- cbind.data.frame("waterfall glen", as.numeric(null.G$beta), as.numeric(null.G$ci.lb), as.numeric(null.G$ci.ub))
-colnames(row7) <- c("site", "intercept", "lb", "ub")
-intercept.df <- rbind.data.frame(row1,row2,row3,row4,row5,row6,row7)
-
-# write to file
-write.csv(intercept.df, "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/site_intercept.csv")
+m6.combined.write <- tidy(m6.combined_SMass_centered)
+m6.combined.write$ci.lb <- m6.combined_SMass_centered$ci.lb
+m6.combined.write$ci.ub <- m6.combined_SMass_centered$ci.ub
+write_csv(m6.combined.write, "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/stats_with_fragments/m6.combined.csv")
 
 # data summary
 nrow(master.df) # 294 total records
@@ -299,3 +199,4 @@ nrow(female.df) # 173 total records
 female.df$species %>% unique() %>% length() # 142 unique species
 nrow(combined.df) # 326 total records
 combined.df$species %>% unique() %>% length() # 149 unique species
+

@@ -177,5 +177,3 @@ write.csv(tss_sex, "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/tss_fi
 wate_sp <- intersect(wate.males.df$species, wate.females.df$species)
 wate_sex <- wate.df[wate.df$species %in% wate_sp,]
 write.csv(wate_sex, "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/wate_filtered_sex.csv")
-
-

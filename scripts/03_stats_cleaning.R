@@ -19,7 +19,7 @@ site <- as.vector(as.character(precip.df$site))
 # load lat long data
 latlong.df <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/latlong.csv")
 
-# calculate annual mean
+# reformat
 temp.df <- subset(temp.df, select = -c(site))
 x <- as.data.frame(temp.df)
 temp.df <- as.data.frame(lapply(split(as.list(x),f = colnames(x)),
@@ -37,10 +37,28 @@ rownames(temp.df) <- NULL
 colnames(temp.df) <- NULL
 temp.df <- temp.df[-1,]
 colnames(temp.df) <- cols
-temp.df$year <- str_extract(temp.df$year, regexp) #rename columns
-temp.df$year <- as.numeric(temp.df$year)
 
-# calculate annual mean
+# june / july only
+summer_temps.df <- temp.df[grep("\\d+\\.6|\\d+\\.7",temp.df$year),] # regex extracts months 6 and 7
+summer_temps.df$year <- str_extract(summer_temps.df$year, regexp) #rename columns
+summer_temps.df$year <- as.numeric(summer_temps.df$year)
+summer_temps.df <- summer_temps.df %>% mutate_if(is.character,as.numeric)
+summer_temps.df <- summer_temps.df %>%
+  group_by(year) %>% 
+  summarise_at(vars("Powdermill","Teton","Waterfall",
+                    "Panama","Brazil","Puerto Rico","Palomarin","Guanica"), mean)
+
+# tropics (all months)
+all_temps.df <- temp.df
+all_temps.df$year <- str_extract(all_temps.df$year, regexp) #rename columns
+all_temps.df$year <- as.numeric(all_temps.df$year)
+all_temps.df <- all_temps.df %>% mutate_if(is.character,as.numeric)
+all_temps.df <- all_temps.df %>%
+  group_by(year) %>% 
+  summarise_at(vars("Powdermill","Teton","Waterfall",
+                    "Panama","Brazil","Puerto Rico","Palomarin","Guanica"), mean)
+
+# reformat
 precip.df <- subset(precip.df, select = -c(site))
 x <- as.data.frame(precip.df)
 precip.df <- as.data.frame(lapply(split(as.list(x),
@@ -59,8 +77,26 @@ rownames(precip.df) <- NULL
 colnames(precip.df) <- NULL
 precip.df <- precip.df[-1,]
 colnames(precip.df) <- cols
-precip.df$year <- str_extract(precip.df$year, regexp) #rename columns
-precip.df$year <- as.numeric(precip.df$year)
+
+# temperate precip (june / july only)
+summer_precip.df <- precip.df[grep("\\d+\\.6|\\d+\\.7",precip.df$year),] # regex extracts months 6 and 7
+summer_precip.df$year <- str_extract(summer_precip.df$year, regexp) #rename columns
+summer_precip.df$year <- as.numeric(summer_precip.df$year)
+summer_precip.df <- summer_precip.df %>% mutate_if(is.character,as.numeric)
+summer_precip.df <- summer_precip.df %>%
+  group_by(year) %>% 
+  summarise_at(vars("Powdermill","Teton","Waterfall",
+                    "Panama","Brazil","Puerto Rico","Palomarin","Guanica"), mean)
+
+# tropics precip precip (all months)
+all_precip.df <- precip.df
+all_precip.df$year <- str_extract(all_precip.df$year, regexp) #rename columns
+all_precip.df$year <- as.numeric(all_precip.df$year)
+all_precip.df <- all_precip.df %>% mutate_if(is.character,as.numeric)
+all_precip.df <- all_precip.df %>%
+  group_by(year) %>% 
+  summarise_at(vars("Powdermill","Teton","Waterfall",
+                    "Panama","Brazil","Puerto Rico","Palomarin","Guanica"), mean)
 
 # load phylogenies
 # supertree <-read.tree("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/AllBirdsHackett1.tre")
@@ -74,87 +110,129 @@ supertree.species <- supertree$tip.label # save vector of species names
 
 # run dataframe function for Brazil, sex-blind
 make_stats_df(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/brazil_filtered.csv", site_name="Brazil", output_path = 
-                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/brazil_stats_all.csv")
+                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/brazil_stats_all.csv",
+              months = "ALL",
+              climate_regression_years = "SAMPLED")
 
 # run dataframe function for Panama, sex-blind
 make_stats_df(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/panama_filtered.csv", site_name="Panama", output_path = 
-                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/panama_stats_all.csv")
+                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/panama_stats_all.csv",
+              months = "ALL",
+              climate_regression_years = "SAMPLED")
 
 # run dataframe function for Guanica, sex-blind
 make_stats_df(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/guanica_filtered.csv", site_name="Guanica", output_path = 
-                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/guanica_stats_all.csv")
+                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/guanica_stats_all.csv",
+              months = "ALL",
+              climate_regression_years = "SAMPLED")
 
 # run dataframe function for Powdermill, sex-blind
 make_stats_df(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/powdermill_filtered.csv", site_name="Powdermill", output_path = 
-                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/powdermill_stats_all.csv")
+                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/powdermill_stats_all.csv",
+              months = "SUMMER",
+              climate_regression_years = "SAMPLED")
 
 # run dataframe function for Palomarin, sex-blind
 make_stats_df(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/palo_filtered.csv", site_name="Palomarin", output_path = 
-                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/palo_stats_all.csv")
+                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/palo_stats_all.csv",
+              months = "SUMMER",
+              climate_regression_years = "SAMPLED")
 
 # run dataframe function for TSS, sex-blind
 make_stats_df(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/tss_filtered.csv", site_name="Teton", output_path = 
-                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/tss_stats_all.csv")
+                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/tss_stats_all.csv",
+              months = "SUMMER",
+              climate_regression_years = "SAMPLED")
 
 # run dataframe function for Waterfall Glen, sex-blind
 make_stats_df(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/wate_filtered.csv", site_name="Waterfall", output_path = 
-                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/wate_stats_all.csv")
+                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/wate_stats_all.csv",
+              months = "SUMMER",
+              climate_regression_years = "SAMPLED")
 
 # run dataframe function for Brazil, males
 make_stats_df(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/brazil_filtered_males.csv", site_name="Brazil", output_path = 
-                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/brazil_stats_males.csv")
+                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/brazil_stats_males.csv",
+              months = "ALL",
+              climate_regression_years = "SAMPLED")
 
 # run dataframe function for Panama, males
 make_stats_df(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/panama_filtered_males.csv", site_name="Panama", output_path = 
-                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/panama_stats_males.csv")
+                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/panama_stats_males.csv",
+              months = "ALL",
+              climate_regression_years = "SAMPLED")
 
 # run dataframe function for Guanica, males
 make_stats_df(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/guanica_filtered_males.csv", site_name="Guanica", output_path = 
-                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/guanica_stats_males.csv")
+                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/guanica_stats_males.csv",
+              months = "ALL",
+              climate_regression_years = "SAMPLED")
 
 # run dataframe function for Powdermill, males
 make_stats_df(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/powdermill_filtered_males.csv", site_name="Powdermill", output_path = 
-                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/powdermill_stats_males.csv")
+                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/powdermill_stats_males.csv",
+              months = "SUMMER",
+              climate_regression_years = "SAMPLED")
 
 # run dataframe function for Palomarin, males
 make_stats_df(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/palo_filtered_males.csv", site_name="Palomarin", output_path = 
-                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/palo_stats_males.csv")
+                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/palo_stats_males.csv",
+              months = "SUMMER",
+              climate_regression_years = "SAMPLED")
 
 # run dataframe function for TSS, males
 make_stats_df(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/tss_filtered_males.csv", site_name="Teton", output_path = 
-                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/tss_stats_males.csv")
+                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/tss_stats_males.csv",
+              months = "SUMMER",
+              climate_regression_years = "SAMPLED")
 
 # run dataframe function for Waterfall Glen, males
 make_stats_df(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/wate_filtered_males.csv", site_name="Waterfall", output_path = 
-                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/wate_stats_males.csv")
+                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/wate_stats_males.csv",
+              months = "SUMMER",
+              climate_regression_years = "SAMPLED")
 
 # run dataframe function for Brazil, females
 make_stats_df(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/brazil_filtered_females.csv", site_name="Brazil", output_path = 
-                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/brazil_stats_females.csv")
+                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/brazil_stats_females.csv",
+              months = "ALL",
+              climate_regression_years = "SAMPLED")
 
 # run dataframe function for Panama, females
 make_stats_df(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/panama_filtered_females.csv", site_name="Panama", output_path = 
-                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/panama_stats_females.csv")
+                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/panama_stats_females.csv",
+              months = "ALL",
+              climate_regression_years = "SAMPLED")
 
 # run dataframe function for Guanica, females
 make_stats_df(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/guanica_filtered_females.csv", site_name="Guanica", output_path = 
-                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/guanica_stats_females.csv")
+                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/guanica_stats_females.csv",
+              months = "ALL",
+              climate_regression_years = "SAMPLED")
 
 # run dataframe function for Powdermill, females
 make_stats_df(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/powdermill_filtered_females.csv", site_name="Powdermill", output_path = 
-                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/powdermill_stats_females.csv")
+                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/powdermill_stats_females.csv",
+              months = "SUMMER",
+              climate_regression_years = "SAMPLED")
 
 # run dataframe function for Palomarin, females
 make_stats_df(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/palo_filtered_females.csv", site_name="Palomarin", output_path = 
-                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/palo_stats_females.csv")
+                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/palo_stats_females.csv",
+              months = "SUMMER",
+              climate_regression_years = "SAMPLED")
 
 # run dataframe function for TSS, females
 make_stats_df(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/tss_filtered_females.csv", site_name="Teton", output_path = 
-                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/tss_stats_females.csv")
+                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/tss_stats_females.csv",
+              months = "SUMMER",
+              climate_regression_years = "SAMPLED")
 
 # run dataframe function for Waterfall Glen, females
 make_stats_df(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/wate_filtered_females.csv", site_name="Waterfall", output_path = 
-                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/wate_stats_females.csv")
+                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/wate_stats_females.csv",
+              months = "SUMMER",
+              climate_regression_years = "SAMPLED")
 
 # load data frames
 brazil.df <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/brazil_stats_all.csv")
@@ -252,115 +330,3 @@ write.tree(palo.tree, "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/pal
 sex.species <- union(master.males.df$species, master.females.df$species)
 sex.tree <- keep.tip(supertree, sex.species)
 write.tree(sex.tree, "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/sex_analysis_phy.tree")
-
-# run dataframe function for Brazil, sex-blind, wing length data
-make_stats_wl(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/brazil_filtered.csv", site_name="Brazil", output_path = 
-                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/brazil_stats_wl.csv")
-
-# run dataframe function for Panama, sex-blind, wing length data
-make_stats_wl(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/panama_filtered.csv", site_name="Panama", output_path = 
-                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/panama_stats_wl.csv")
-
-# run dataframe function for Guanica, sex-blind, wing length data
-make_stats_wl(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/guanica_filtered.csv", site_name="Guanica", output_path = 
-                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/guanica_stats_wl.csv")
-
-# run dataframe function for Powdermill, sex-blind, wing length data
-make_stats_wl(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/powdermill_filtered.csv", site_name="Powdermill", output_path = 
-                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/powdermill_stats_wl.csv")
-
-# run dataframe function for Palomarin, sex-blind, wing length data
-make_stats_wl(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/palo_filtered.csv", site_name="Palomarin", output_path = 
-                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/palo_stats_wl.csv")
-
-# run dataframe function for TSS, sex-blind, wing length data
-make_stats_wl(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/tss_filtered.csv", site_name="Teton", output_path = 
-                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/tss_stats_wl.csv")
-
-# run dataframe function for Waterfall Glen, sex-blind, wing length data
-make_stats_wl(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/wate_filtered.csv", site_name="Waterfall", output_path = 
-                "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/wate_stats_wl.csv")
-
-# load wing length dfs
-brazil.wl.df <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/brazil_stats_wl.csv")
-panama.wl.df <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/panama_stats_wl.csv")
-guanica.wl.df <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/guanica_stats_wl.csv")
-powdermill.wl.df <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/powdermill_stats_wl.csv")
-palo.wl.df <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/palo_stats_wl.csv")
-tss.wl.df <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/tss_stats_wl.csv")
-wate.wl.df <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/wate_stats_wl.csv")
-
-# merge wing length dfs
-master.wl.df <- rbind.data.frame(brazil.wl.df, panama.wl.df, guanica.wl.df, palo.wl.df, tss.wl.df, powdermill.wl.df)
-
-# drop species in more than one site from all subsequent sites after the first
-# master.wl.df <- master.wl.df %>% group_by(species) %>% filter(row_number() == 1)
-
-# check correlation
-wl.mod <- lm(slope_wl ~ slope_mass, master.wl.df)
-summary(wl.mod) #p-value: 0.4541, Adjusted R-squared:  -0.001534 
-
-# write data for plotting
-write.csv(master.wl.df, "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/master.wl.df")
-
-# run dataframe function for Brazil, sex-blind, tarsus data
-make_stats_tarsus(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/brazil_filtered.csv", site_name="Brazil", output_path = 
-                    "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/brazil_stats_tarsus.csv") #"no data"
-
-# run dataframe function for Panama, sex-blind, wing length data
-make_stats_tarsus(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/panama_filtered.csv", site_name="Panama", output_path = 
-                    "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/panama_stats_tarsus.csv") 
-
-# run dataframe function for Guanica, sex-blind, wing length data
-make_stats_tarsus(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/guanica_filtered.csv", site_name="Guanica", output_path = 
-                    "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/guanica_stats_tarsus.csv")
-
-# run dataframe function for Powdermill, sex-blind, wing length data
-make_stats_tarsus(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/powdermill_filtered.csv", site_name="Powdermill", output_path = 
-                    "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/powdermill_stats_tarsus.csv") # "no data"
-
-# run dataframe function for Palomarin, sex-blind, wing length data
-make_stats_tarsus(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/palo_filtered.csv", site_name="Palomarin", output_path = 
-                    "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/palo_stats_tarsus.csv") 
-
-# run dataframe function for TSS, sex-blind, wing length data
-make_stats_tarsus(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/tss_filtered.csv", site_name="Teton", output_path = 
-                    "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/tss_stats_tarsus.csv") #"no data"
-
-# run dataframe function for Waterfall Glen, sex-blind, wing length data
-make_stats_tarsus(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/wate_filtered.csv", site_name="Waterfall", output_path = 
-                    "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/wate_stats_tarsus.csv") #"no data"
-
-# load tarsus  dfs
-panama.tarsus.df <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/panama_stats_tarsus.csv")
-guanica.tarsus.df <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/guanica_stats_tarsus.csv")
-palomarin.tarsus.df <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/palo_stats_tarsus.csv")
-
-# merge wing length dfs
-master.tarsus.df <- rbind.data.frame(panama.tarsus.df, guanica.tarsus.df, palomarin.tarsus.df)
-
-# drop species in more than one site from all subsequent sites after the first
-# master.tarsus.df <- master.tarsus.df %>% group_by(species) %>% filter(row_number() == 1)
-
-# check correlation
-tarsus.mod <- lm(slope_tarsus ~ slope_mass, master.tarsus.df)
-summary(tarsus.mod) #p-value: 0.4509, Adjusted R-squared:  -0.004465   
-
-# replace space in species names with underscore
-master.tarsus.df$species <- sub(" ", "_", master.tarsus.df$species) # replace space with underscore
-
-# write data 
-write.csv(master.tarsus.df, "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/tarsus_analysis_df.csv")
-
-# clean taxonomy
-clean_taxonomy(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/tarsus_analysis_df.csv",
-               output_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/tarsus_analysis_df.csv")
-
-# reload data
-master.tarsus.df <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/tarsus_analysis_df.csv")
-
-# prune tree
-tarsus.tree <- keep.tip(supertree, master.tarsus.df$species)
-write.tree(tarsus.tree, "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/tarsus_analysis_phy.tree")
-
-

@@ -3,12 +3,13 @@ clean_data <- function(file_path, output_path, drop_juveniles=FALSE, drop_frags=
                        sex=c("MALES","FEMALES","ALL"), 
                        climate=c("TEMPERATE","TROPICAL"), 
                        brazil=FALSE,
-                       s_dev=4){
+                       s_dev=4,
+                       sample_size_parameter=5){
   
   # required package
   require(lubridate)
   
-  # load data data
+  # load data
   data.full <- read.csv(file_path, stringsAsFactors = FALSE, fileEncoding="latin1") 
   
   # subset to relevant columns
@@ -104,13 +105,13 @@ clean_data <- function(file_path, output_path, drop_juveniles=FALSE, drop_frags=
   # drop old species without five individuals per time period
   data.old.species <- as.data.frame(table(data.old$species))
   colnames(data.old.species) <- c("species", "frequency")
-  data.sp.old.keep <- data.old.species[which(data.old.species$frequency > 4),]
+  data.sp.old.keep <- data.old.species[which(data.old.species$frequency >= sample_size_parameter),]
   data.sp.old.keep <- as.character(data.sp.old.keep$species)
   
   # drop new species without five individuals per time period
   data.new.species <- as.data.frame(table(data.new$species))
   colnames(data.new.species) <- c("species", "frequency")
-  data.sp.new.keep <- data.new.species[which(data.new.species$frequency > 4),]
+  data.sp.new.keep <- data.new.species[which(data.new.species$frequency >= sample_size_parameter),]
   data.sp.new.keep <- as.character(data.sp.new.keep$species)
   
   # find shared set, subset data frame
@@ -125,10 +126,18 @@ clean_data <- function(file_path, output_path, drop_juveniles=FALSE, drop_frags=
   write.csv(data.df.all, file=output_path)
 }
 
-make_stats_df <- function(file_path, site_name, output_path){
+make_stats_df <- function(file_path, site_name, output_path, 
+                          months=c("ALL","SUMMER"),
+                          climate_regression_years=c("ALL","SAMPLED")){
   
   # load data 
   data.all <- read.csv(file = file_path, fileEncoding="latin1")[-1]
+  
+  # pick climate dataset
+  if(months=="ALL"){temp.df <- all_temps.df}
+  if(months=="ALL"){precip.df <- all_precip.df}
+  if(months=="SUMMER"){temp.df <- summer_temps.df}
+  if(months=="SUMMER"){precip.df <- summer_precip.df}
   
   # subset temp data, merge with df
   data.temps <- cbind.data.frame(temp.df$year, temp.df[,colnames(temp.df)==site_name])
@@ -137,40 +146,87 @@ make_stats_df <- function(file_path, site_name, output_path){
   colnames(data.precip) <- c("year", "MAP")
   data.temps$MAT <- as.numeric(as.character(data.temps$MAT))
   data.precip$MAP <- as.numeric(as.character(data.precip$MAP))
+  
+  # merge datasets
   data.all <- merge(data.all, data.temps, by.x="year", by.y="year", all.y=FALSE)
   data.all <- merge(data.all, data.precip, by.x="year", by.y="year", all.y=FALSE)
   
-  # loop to get mean mass change per species
-  data.delta <- list()
-  for(i in unique(data.all$species)){
-    tmp <- data.all[data.all$species==i,]
-    n <- nrow(tmp) # get sample size
-    n.years <- length(unique(tmp$year)) # get number of years
-    min.year <- min(tmp$year)
-    max.year <- max(tmp$year)
-    start.temp <- tmp[tmp$year==min.year,]$MAT %>% mean()
-    end.temp <- tmp[tmp$year==max.year,]$MAT %>% mean()
-    start.precip <- tmp[tmp$year==min.year,]$MAP %>% mean()
-    end.precip <- tmp[tmp$year==max.year,]$MAP %>% mean()
-    mass.start <- mean(tmp[tmp$year==min.year,]$mass) # average mass for starting year
-    mod.mass <- lm(mass ~ year, tmp) # simple regression for mass change
-    mod.mass.sum <- summary(mod.mass)
-    slope.mass <- mod.mass.sum$coefficients[2,1] # get mass slope
-    r2.mass <- mod.mass.sum$r.squared # get mass r-squared
-    se.mass <- mod.mass.sum$coefficients[2,2] # get mass SE
-    mod.temp <- lm(MAT ~ year, tmp) # simple regression for temp change
-    mod.temp.sum <- summary(mod.temp)
-    slope.temp <- mod.temp.sum$coefficients[2,1] # get temp slope
-    r2.temp <- mod.temp.sum$r.squared # get temp r-squared
-    mod.precip <- lm(MAP ~ year, tmp) # simple regression for temp change
-    mod.precip.sum <- summary(mod.precip)
-    slope.precip <- mod.precip.sum$coefficients[2,1] # get temp slope
-    r2.precip <- mod.precip.sum$r.squared # get temp r-squared
-    data.delta[[i]] <- cbind.data.frame(i,n,n.years,slope.mass,r2.mass,se.mass,slope.temp,
-                                        r2.temp,slope.precip,r2.precip,mass.start,
-                                        min.year,max.year,
-                                        start.temp,end.temp,
-                                        start.precip,end.precip)
+  # determine climate trends regardless of whether species is sampled
+  if(climate_regression_years=="ALL"){
+
+    # loop to get mean mass change per species
+    data.delta <- list()
+    for(i in unique(data.all$species)){
+      tmp <- data.all[data.all$species==i,]
+      n <- nrow(tmp) # get sample size
+      n.years <- length(unique(tmp$year)) # get number of years
+      min.year <- min(tmp$year)
+      max.year <- max(tmp$year)
+      start.temp <- tmp[tmp$year==min.year,]$MAT %>% mean()
+      end.temp <- tmp[tmp$year==max.year,]$MAT %>% mean()
+      start.precip <- tmp[tmp$year==min.year,]$MAP %>% mean()
+      end.precip <- tmp[tmp$year==max.year,]$MAP %>% mean()
+      mass.start <- mean(tmp[tmp$year==min.year,]$mass) # average mass for starting year
+      mod.mass <- lm(mass ~ year, tmp) # simple regression for mass change
+      mod.mass.sum <- summary(mod.mass)
+      slope.mass <- mod.mass.sum$coefficients[2,1] # get mass slope
+      r2.mass <- mod.mass.sum$r.squared # get mass r-squared
+      se.mass <- mod.mass.sum$coefficients[2,2] # get mass SE
+      temp.tmp <- data.temps[data.temps$year %in% seq(min.year, max.year),]
+      mod.temp <- lm(MAT ~ year, temp.tmp) # simple regression for temp change
+      mod.temp.sum <- summary(mod.temp)
+      slope.temp <- mod.temp.sum$coefficients[2,1] # get temp slope
+      r2.temp <- mod.temp.sum$r.squared # get temp r-squared
+      precip.tmp <- data.precip[data.precip$year %in% seq(min.year, max.year),]
+      mod.precip <- lm(MAP ~ year, precip.tmp) # simple regression for temp change
+      mod.precip.sum <- summary(mod.precip)
+      slope.precip <- mod.precip.sum$coefficients[2,1] # get temp slope
+      r2.precip <- mod.precip.sum$r.squared # get temp r-squared
+      data.delta[[i]] <- cbind.data.frame(i,n,n.years,slope.mass,r2.mass,se.mass,slope.temp,
+                                          r2.temp,slope.precip,r2.precip,mass.start,
+                                          min.year,max.year,
+                                          start.temp,end.temp,
+                                          start.precip,end.precip)
+    }
+    
+  }
+  
+  # determine climate trends based on year species is sampled
+  if(climate_regression_years=="SAMPLED"){
+    
+    # loop to get mean mass change per species
+    data.delta <- list()
+    for(i in unique(data.all$species)){
+      tmp <- data.all[data.all$species==i,]
+      n <- nrow(tmp) # get sample size
+      n.years <- length(unique(tmp$year)) # get number of years
+      min.year <- min(tmp$year)
+      max.year <- max(tmp$year)
+      start.temp <- tmp[tmp$year==min.year,]$MAT %>% mean()
+      end.temp <- tmp[tmp$year==max.year,]$MAT %>% mean()
+      start.precip <- tmp[tmp$year==min.year,]$MAP %>% mean()
+      end.precip <- tmp[tmp$year==max.year,]$MAP %>% mean()
+      mass.start <- mean(tmp[tmp$year==min.year,]$mass) # average mass for starting year
+      mod.mass <- lm(mass ~ year, tmp) # simple regression for mass change
+      mod.mass.sum <- summary(mod.mass)
+      slope.mass <- mod.mass.sum$coefficients[2,1] # get mass slope
+      r2.mass <- mod.mass.sum$r.squared # get mass r-squared
+      se.mass <- mod.mass.sum$coefficients[2,2] # get mass SE
+      mod.temp <- lm(MAT ~ year, tmp) # simple regression for temp change
+      mod.temp.sum <- summary(mod.temp)
+      slope.temp <- mod.temp.sum$coefficients[2,1] # get temp slope
+      r2.temp <- mod.temp.sum$r.squared # get temp r-squared
+      mod.precip <- lm(MAP ~ year, tmp) # simple regression for temp change
+      mod.precip.sum <- summary(mod.precip)
+      slope.precip <- mod.precip.sum$coefficients[2,1] # get temp slope
+      r2.precip <- mod.precip.sum$r.squared # get temp r-squared
+      data.delta[[i]] <- cbind.data.frame(i,n,n.years,slope.mass,r2.mass,se.mass,slope.temp,
+                                          r2.temp,slope.precip,r2.precip,mass.start,
+                                          min.year,max.year,
+                                          start.temp,end.temp,
+                                          start.precip,end.precip)
+    }
+    
   }
   
   # assemble dataframe
@@ -185,122 +241,7 @@ make_stats_df <- function(file_path, site_name, output_path){
   write.csv(data.mass.df, file=output_path)
 }
 
-make_stats_wl <- function(file_path, site_name, output_path){
-  
-  # load data 
-  data.all <- read.csv(file = file_path, fileEncoding="latin1")[-1]
-  data.all <- data.all[!is.na(data.all$wing_length),]
-  data.all <- data.all[with(data.all, species %in% names(which(table(species)>=5))), ]
-  
-  #test for data
-  if(nrow(data.all)==0){print("no data")}
-
-  # subset temp data, merge with df
-  data.temps <- cbind.data.frame(temp.df$year, temp.df[,colnames(temp.df)==site_name])
-  data.precip <- cbind.data.frame(precip.df$year, precip.df[,colnames(precip.df)==site_name])
-  colnames(data.temps) <- c("year", "MAT")
-  colnames(data.precip) <- c("year", "MAP")
-  data.temps$MAT <- as.numeric(as.character(data.temps$MAT))
-  data.precip$MAP <- as.numeric(as.character(data.precip$MAP))
-  data.all <- merge(data.all, data.temps, by.x="year", by.y="year", all.y=FALSE)
-  data.all <- merge(data.all, data.precip, by.x="year", by.y="year", all.y=FALSE)
-  
-  # loop to get mean mass change per species
-  data.delta <- list()
-  for(i in unique(data.all$species)){
-    tmp <- data.all[data.all$species==i,]
-    n <- nrow(tmp) # get sample size
-    n.years <- length(unique(tmp$year)) # get number of years
-    min.year <- min(tmp$year)
-    mass.start <- mean(tmp[tmp$year==min.year,]$mass) # average mass for starting year
-    mod.mass <- lm(mass ~ year, tmp) # simple regression for mass change
-    mod.mass.sum <- summary(mod.mass)
-    slope.mass <- mod.mass.sum$coefficients[2,1] # get mass slope
-    r2.mass <- mod.mass.sum$r.squared # get mass r-squared
-    se.mass <- mod.mass.sum$coefficients[2,2] # get mass SE
-    mod.temp <- lm(MAT ~ year, tmp) # simple regression for temp change
-    mod.temp.sum <- summary(mod.temp)
-    slope.temp <- mod.temp.sum$coefficients[2,1] # get temp slope
-    r2.temp <- mod.temp.sum$r.squared # get temp r-squared
-    mod.wl <- lm(wing_length ~ year, tmp) # simple regression for wing length change
-    mod.wl.sum <- summary(mod.wl)
-    slope.wl <- mod.wl.sum$coefficients[2,1] # get mass slope
-    r2.wl <- mod.wl.sum$r.squared # get mass r-squared
-    data.delta[[i]] <- cbind.data.frame(i,n,n.years,slope.mass,r2.mass,se.mass,slope.temp,r2.temp,mass.start,slope.wl,r2.wl)
-  }
-  
-  # assemble dataframe
-  data.wl.df <- do.call(rbind, data.delta)
-  rownames(data.wl.df) <- NULL
-  colnames(data.wl.df) <- c("species","sample_size","no_years","slope_mass","variance_mass","se_mass","slope_temp", "variance_temp",
-                              "starting_mass","slope_wl","variance_wl")
-  data.wl.df$lat <- rep(latlong.df[latlong.df$site==site_name,]$lat, nrow(data.wl.df))
-  data.wl.df$long <- rep(latlong.df[latlong.df$site==site_name,]$long, nrow(data.wl.df))
-  
-  write.csv(data.wl.df, file=output_path)
-}
-
-make_stats_tarsus <- function(file_path, site_name, output_path){
-  
-  # load data 
-  data.all <- read.csv(file = file_path, fileEncoding="latin1")[-1]
-  data.all <- data.all[!is.na(data.all$tarsus),]
-  data.all <- data.all[with(data.all, species %in% names(which(table(species)>=5))), ]
-  
-  #test for data
-  if(nrow(data.all)==0){print("no data")}
-
-  # subset temp data, merge with df
-  data.temps <- cbind.data.frame(temp.df$year, temp.df[,colnames(temp.df)==site_name])
-  data.precip <- cbind.data.frame(precip.df$year, precip.df[,colnames(precip.df)==site_name])
-  colnames(data.temps) <- c("year", "MAT")
-  colnames(data.precip) <- c("year", "MAP")
-  data.temps$MAT <- as.numeric(as.character(data.temps$MAT))
-  data.precip$MAP <- as.numeric(as.character(data.precip$MAP))
-  data.all <- merge(data.all, data.temps, by.x="year", by.y="year", all.y=FALSE)
-  data.all <- merge(data.all, data.precip, by.x="year", by.y="year", all.y=FALSE)
-  
-  # loop to get mean mass change per species
-  data.delta <- list()
-  for(i in unique(data.all$species)){
-    tmp <- data.all[data.all$species==i,]
-    n <- nrow(tmp) # get sample size
-    n.years <- length(unique(tmp$year)) # get number of years
-    min.year <- min(tmp$year)
-    mass.start <- mean(tmp[tmp$year==min.year,]$mass) # average mass for starting year
-    mod.mass <- lm(mass ~ year, tmp) # simple regression for mass change
-    mod.mass.sum <- summary(mod.mass)
-    slope.mass <- mod.mass.sum$coefficients[2,1] # get mass slope
-    r2.mass <- mod.mass.sum$r.squared # get mass r-squared
-    se.mass <- mod.mass.sum$coefficients[2,2] # get mass SE
-    mod.temp <- lm(MAT ~ year, tmp) # simple regression for temp change
-    mod.temp.sum <- summary(mod.temp)
-    slope.temp <- mod.temp.sum$coefficients[2,1] # get temp slope
-    r2.temp <- mod.temp.sum$r.squared # get temp r-squared
-    mod.precip <- lm(MAP ~ year, tmp) # simple regression for temp change
-    mod.precip.sum <- summary(mod.precip)
-    slope.precip <- mod.precip.sum$coefficients[2,1] # get temp slope
-    r2.precip <- mod.precip.sum$r.squared # get temp r-squared
-    mod.tarsus <- lm(tarsus ~ year, tmp) # simple regression for wing length change
-    mod.tarsus.sum <- summary(mod.tarsus)
-    slope.tarsus <- mod.tarsus.sum$coefficients[2,1] # get mass slope
-    r2.tarsus <- mod.tarsus.sum$r.squared # get mass r-squared
-    se.tarsus <- mod.tarsus.sum$r.squared # get mass r-squared
-    data.delta[[i]] <- cbind.data.frame(i,n,n.years,slope.mass,r2.mass,se.mass,slope.temp,r2.temp,slope.precip,
-                                        r2.precip,mass.start,slope.tarsus,r2.tarsus,se.tarsus)
-  }
-  
-  # assemble dataframe
-  data.tarsus.df <- do.call(rbind, data.delta)
-  rownames(data.tarsus.df) <- NULL
-  colnames(data.tarsus.df) <- c("species","sample_size","no_years","slope_mass","variance_mass","se_mass","slope_temp","variance_temp",
-                              "slope_precip","variance_precip","starting_mass","slope_tarsus","variance_tarsus","se_tarsus")
-  data.tarsus.df$lat <- rep(latlong.df[latlong.df$site==site_name,]$lat, nrow(data.tarsus.df))
-  data.tarsus.df$long <- rep(latlong.df[latlong.df$site==site_name,]$long, nrow(data.tarsus.df))
-  
-  write.csv(data.tarsus.df, file=output_path)
-}
-
+# function to match taxonomy to Jetz
 clean_taxonomy <- function(file_path, output_path){
   
   # load data
@@ -422,13 +363,14 @@ clean_taxonomy <- function(file_path, output_path){
   if("Colaptes_a._cafer" %in% input_obj$species==TRUE) {input_obj[grep("Colaptes_a._cafer",input_obj$species),]$species <-"Colaptes_auratus" }
   if("Zonotrichia_l._nuttalli" %in% input_obj$species==TRUE) {input_obj[grep("Zonotrichia_l._nuttalli",input_obj$species),]$species <-"Zonotrichia_leucophrys" }
   if("Junco_h._oregonus" %in% input_obj$species==TRUE) {input_obj[grep("Junco_h._oregonus",input_obj$species),]$species <-"Junco_hyemalis" }
-  
+  if("Vermivora_chrysoptera x cyanoptera" %in% input_obj$species==TRUE) {input_obj[grep("Vermivora_chrysoptera x cyanoptera",input_obj$species),]$species <-"Vermivora_chrysoptera" }
   
   # write to file
   write.csv(input_obj, output_path)
 }
 
-temp_change <- function(file_path, site_name, output_path){
+# function to calculate temperature change for each site across sampled years for each species
+temp_change <- function(file_path, site_name, months=c("ALL","SUMMER"), output_path){
   
   # required packages
   require(stringr, tidyverse)
@@ -438,7 +380,7 @@ temp_change <- function(file_path, site_name, output_path){
   regexp <- "[[:digit:]]+" #regex to extract year from column names
   colnames(temp.df) <- c("site", str_extract(colnames(temp.df), regexp)[-1]) #rename columns
   site <- as.vector(as.character(temp.df$site))
-
+  
   # calculate annual mean
   temp.df <- subset(temp.df, select = -c(site))
   x <- as.data.frame(temp.df)
@@ -457,9 +399,32 @@ temp_change <- function(file_path, site_name, output_path){
   colnames(temp.df) <- NULL
   temp.df <- temp.df[-1,]
   colnames(temp.df) <- cols
-  temp.df$year <- str_extract(temp.df$year, regexp) #rename columns
-
   
+  if(months=="SUMMER"){
+    summer_temps.df <- temp.df[grep("\\d+\\.6|\\d+\\.7",temp.df$year),] # regex extracts months 6 and 7
+    summer_temps.df$year <- str_extract(summer_temps.df$year, regexp) #rename columns
+    summer_temps.df$year <- as.numeric(summer_temps.df$year)
+    summer_temps.df <- summer_temps.df %>% mutate_if(is.character,as.numeric)
+    summer_temps.df <- summer_temps.df %>%
+      group_by(year) %>% 
+      summarise_at(vars("Powdermill","Teton","Waterfall",
+                        "Panama","Brazil","Puerto Rico","Palomarin","Guanica"), mean)
+    temp.df <- summer_temps.df
+  }
+  
+  
+  if(months=="ALL"){
+    all_temps.df <- temp.df
+    all_temps.df$year <- str_extract(all_temps.df$year, regexp) #rename columns
+    all_temps.df$year <- as.numeric(all_temps.df$year)
+    all_temps.df <- all_temps.df %>% mutate_if(is.character,as.numeric)
+    all_temps.df <- all_temps.df %>%
+      group_by(year) %>% 
+      summarise_at(vars("Powdermill","Teton","Waterfall",
+                      "Panama","Brazil","Puerto Rico","Palomarin","Guanica"), mean)
+    temp.df <- all_temps.df
+  }
+
   # load data 
   data.all <- read.csv(file = file_path, fileEncoding="latin1")[-1]
   
@@ -474,7 +439,8 @@ temp_change <- function(file_path, site_name, output_path){
   
 }
 
-precip_change <- function(file_path, site_name, output_path){
+# function to calculate precip change for each site across sampled years for each species
+precip_change <- function(file_path, site_name, months=c("ALL","SUMMER"), output_path){
   
   # required packages
   require(stringr, tidyverse)
@@ -492,7 +458,7 @@ precip_change <- function(file_path, site_name, output_path){
                                     function(x) Reduce(`+`,x) / length(x)))
   precip.df <- cbind.data.frame(site,precip.df)
   
-  # transpose 
+  # transpose
   precip.df <- precip.df %>%
     rownames_to_column %>% 
     gather(var, value, -rowname) %>% 
@@ -503,7 +469,30 @@ precip_change <- function(file_path, site_name, output_path){
   colnames(precip.df) <- NULL
   precip.df <- precip.df[-1,]
   colnames(precip.df) <- cols
-  precip.df$year <- str_extract(precip.df$year, regexp) #rename columns
+  
+  if(months=="SUMMER"){
+    summer_precip.df <- precip.df[grep("\\d+\\.6|\\d+\\.7",precip.df$year),] # regex extracts months 6 and 7
+    summer_precip.df$year <- str_extract(summer_precip.df$year, regexp) #rename columns
+    summer_precip.df$year <- as.numeric(summer_precip.df$year)
+    summer_precip.df <- summer_precip.df %>% mutate_if(is.character,as.numeric)
+    summer_precip.df <- summer_precip.df %>%
+      group_by(year) %>% 
+      summarise_at(vars("Powdermill","Teton","Waterfall",
+                        "Panama","Brazil","Puerto Rico","Palomarin","Guanica"), mean)
+    precip.df <- summer_precip.df
+  }
+  
+  if(months=="ALL"){
+    all_precip.df <- precip.df
+    all_precip.df$year <- str_extract(all_precip.df$year, regexp) #rename columns
+    all_precip.df$year <- as.numeric(all_precip.df$year)
+    all_precip.df <- all_precip.df %>% mutate_if(is.character,as.numeric)
+    all_precip.df <- all_precip.df %>%
+      group_by(year) %>% 
+      summarise_at(vars("Powdermill","Teton","Waterfall",
+                        "Panama","Brazil","Puerto Rico","Palomarin","Guanica"), mean)
+    precip.df <- all_precip.df
+  }
   
   # load data 
   data.all <- read.csv(file = file_path, fileEncoding="latin1")[-1]
@@ -518,4 +507,3 @@ precip_change <- function(file_path, site_name, output_path){
   write.csv(data.all, output_path)
   
 }
-

@@ -9,6 +9,7 @@ library(ggspatial)
 library(ggtree)
 library(stringr)
 library(tidyverse)
+source("~/Dropbox/Bird_body_size-analysis/bird_body_size/scripts/00_functions.R")
 
 # load brazil data
 brazil.plotting.sex <- read.csv(file = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/brazil_filtered_sex.csv")[-1]
@@ -331,27 +332,6 @@ png("~/Dropbox/Bird_body_size-analysis/bird_body_size/species_plots/wate_mass_al
 wate2
 dev.off()
 
-# plot histogram of records over months
-months.df <- read.csv(file = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/months.csv")[-1]
-months.df$country <- factor(months.df$country,levels=c("brazil","panama","puertorico","palo","maps","powdermill"))
-levels(months.df$country) <- c("Brazil","Panama","Puerto Rico","Palo","TSS + Waterfall","Powdermill")
-
-m1 <- ggplot(data = months.df, aes(x=month)) +
-  geom_histogram() +
-  theme_bw() +
-  labs(y="Record Frequency", x="Month") +
-  facet_wrap(~country, scales="free_y", ncol=1) +
-  theme(
-    strip.background = element_blank(),
-    legend.position="none",
-    panel.grid = element_blank(),
-    axis.text.x = element_blank(),
-    axis.text.y = element_blank()) 
-
-pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s1.pdf",width=6,height=10)
-m1
-dev.off()
-
 # make master data frame for size correlations
 corr.brazil.df <- cbind.data.frame(brazil.plotting, rep("brazil",nrow(brazil.plotting))) #panama.plotting, guanica.plotting, powdermill.plotting, palo.plotting, wate.plotting)
 colnames(corr.brazil.df) <- c("species", "month", "year", "band_no", "sex","age","mass","wing_length","tarsus","period","site")
@@ -418,7 +398,7 @@ o1 <- ggplot(corr.wing.df, aes(x=mass,y=wing_length)) +
   xlab("Mass (g)") +
   ylab("Wing Length (mm)")
 
-pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s2.pdf",width=8,height=4)
+pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s1.pdf",width=8,height=4)
 plot_grid(n1,o1,labels="AUTO",nrow=1)
 dev.off()
 
@@ -432,7 +412,7 @@ p1 <- ggplot(corr.tarsus.df, aes(x=mass,y=tarsus)) +
   ylab("Tarsus (mm)") +
   facet_wrap(~site, scales="free")
 
-pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s3.pdf",width=8,height=4)
+pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s2.pdf",width=8,height=4)
 p1
 dev.off()
 
@@ -442,11 +422,32 @@ q1 <- ggplot(corr.wing.df, aes(x=mass,y=wing_length)) +
   #annotate(geom = 'text', label = tarsus.annotate, x=90, y=Inf, hjust = 0, vjust = 1) +
   geom_smooth(method = "lm",color="black",linetype="dashed") +
   xlab("Mass (g)") +
-  ylab("Tarsus (mm)") +
+  ylab("Wing Length (mm)") +
   facet_wrap(~site, scales="free")
 
-pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s4.pdf",width=8,height=8)
+pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s3.pdf",width=8,height=8)
 q1
+dev.off()
+
+# plot histogram of records over months
+months.df <- read.csv(file = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/months.csv")[-1]
+months.df$country <- factor(months.df$country,levels=c("brazil","panama","puertorico","palo","maps","powdermill"))
+levels(months.df$country) <- c("Brazil","Panama","Puerto Rico","Palo","TSS + Waterfall","Powdermill")
+
+m1 <- ggplot(data = months.df, aes(x=month)) +
+  geom_histogram() +
+  theme_bw() +
+  labs(y="Record Frequency", x="Month") +
+  facet_wrap(~country, scales="free_y", ncol=1) +
+  theme(
+    strip.background = element_blank(),
+    legend.position="none",
+    panel.grid = element_blank(),
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank()) 
+
+pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s4.pdf",width=6,height=10)
+m1
 dev.off()
 
 tarsus.mod <- list()
@@ -460,17 +461,17 @@ for(i in unique(corr.tarsus.df$site)){
 }
 tarsus.mod 
 
-# $panama
-# r2     slope
-# 1 0.5357902 0.1398531
 # 
-# $guanica
-# r2     slope
-# 1 0.7973442 0.2186975
 # 
-# $palo
-# r2     slope
-# 1 0.6610499 0.2736614
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
 
 wing_length.mod <- list()
 for(i in unique(corr.wing.df$site)){
@@ -513,9 +514,15 @@ wing_length.mod
 
 # phylogeny circle plot
 master.df <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/all_analysis_df.csv")
-master.df <- master.df[!master.df$slope_mass>0.5,]
-master.df <- master.df[!master.df$slope_mass<(-0.5),]
 master.tree <- read.tree("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/all_analysis_phy.tree")
+
+# write species list, phylogeny
+write.csv(x = master.tree$tip.label, file = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/circular_phylogeny_species.csv")
+write.tree(phy = master.tree, file = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/circular_phylogeny.tre")
+
+# visualize
+master.df <- master.df[!master.df$slope_mass>0.5,] # drop outliers to avoid skewing color scale
+master.df <- master.df[!master.df$slope_mass<(-0.5),]
 master.tree <- keep.tip(master.tree, master.df$species)
 master.slope <- cbind.data.frame(master.df$species, master.df$slope_mass)
 p1 <- ggtree(master.tree, layout='circular') %<+% master.slope 
@@ -523,36 +530,40 @@ p1$data$`master.df$slope_mass`[is.na(p1$data$`master.df$slope_mass`)] <- 0
 p2 <- ggtree(master.tree, layout='circular',size=1.5) %<+% master.slope + 
   aes(color=p1$data$`master.df$slope_mass`,guides="test") +
   scale_color_distiller(palette = "BrBG") +
-  geom_tiplab(size=2) +
-  # geom_text(aes(label=node)) +
+  #geom_tiplab(size=2, color="black") + # uncomment to see species
+  #geom_text(aes(label=node), color="black", size = 1) + # uncomment for node assignment
   theme(legend.position="right") +
-  labs(color=expression(paste("Slope ",Delta," mass"))) +
-  geom_cladelabel(node=353, label="", angle=0, offset=2) +
-  geom_cladelabel(node=289, label="", angle=0, offset=2) +
+  labs(color=expression(paste("Slope ",Delta," mass")))  +
+  geom_cladelabel(node=476, label="", angle=0, offset=2) +
+  geom_cladelabel(node=473, label="", angle=0, offset=2) +
+  geom_cladelabel(node=242, label="", angle=0, offset=2) +
+  geom_cladelabel(node=463, label="", angle=0, offset=2) +
+  geom_cladelabel(node=466, label="", angle=0, offset=2) +
+  geom_cladelabel(node=257, label="", angle=0, offset=2) +
+  geom_cladelabel(node=299, label="", angle=0, offset=2) +
+  geom_cladelabel(node=328, label="", angle=0, offset=2) +
+  geom_cladelabel(node=354, label="", angle=0, offset=2) +
+  geom_cladelabel(node=291, label="", angle=0, offset=2) +
+  geom_cladelabel(node=362, label="", angle=0, offset=2) +
+  geom_cladelabel(node=367, label="", angle=0, offset=2) +
   geom_cladelabel(node=377, label="", angle=0, offset=2) +
-  geom_cladelabel(node=393, label="", angle=0, offset=2) +
-  geom_cladelabel(node=349, label="", angle=0, offset=2) +
-  geom_cladelabel(node=228, label="", angle=0, offset=2) +
-  geom_cladelabel(node=265, label="", angle=0, offset=2) +
-  geom_cladelabel(node=259, label="", angle=0, offset=2) +
-  geom_cladelabel(node=405, label="", angle=0, offset=2) +
-  geom_cladelabel(node=216, label="", angle=0, offset=2) +
-  geom_cladelabel(node=423, label="", angle=0, offset=2) +
-  geom_cladelabel(node=420, label="", angle=0, offset=2) +
-  geom_cladelabel(node=307, label="", angle=0, offset=2) +
-  geom_cladelabel(node=338, label="", angle=0, offset=2) +
-  geom_cladelabel(node=330, label="", angle=0, offset=2) +
-  geom_cladelabel(node=330, label="", angle=0, offset=2) +
-  geom_cladelabel(node=320, label="", angle=0, offset=2) +
-  geom_cladelabel(node=325, label="", angle=0, offset=2) +
-  geom_cladelabel(node=316, label="", angle=0, offset=2)
+  geom_cladelabel(node=385, label="", angle=0, offset=2) +
+  geom_cladelabel(node=403, label="", angle=0, offset=2) +
+  geom_cladelabel(node=427, label="", angle=0, offset=2) +
+  geom_cladelabel(node=440, label="", angle=0, offset=2) +
+  geom_cladelabel(node=316, label="", angle=0, offset=2) +
+  geom_cladelabel(node=442, label="", angle=0, offset=2) +
+  geom_cladelabel(node=397, label="", angle=0, offset=2) 
+  
+  
 
 pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/figure_1_components/phylogeny.pdf", width=8, height=8)
 p2
 dev.off()
 
-  
-mod1 <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/stats_with_fragments/m4.combined.csv")
+
+# read model terms 
+mod1 <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/stats_with_fragments/m6.combined.csv")
 mod1$term <- mod1$term %>% as.factor()  
 mod1$term <- mod1$term %>% recode(intercept="Intercept",
                                   `scale(starting_mass, scale = F)`="Starting Mass",
@@ -601,46 +612,34 @@ pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/figure_1_component
 p4
 dev.off()
 
-# site-specific intercept plot
-intercept.df <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/site_intercept.csv")[-1]
-s5 <- ggplot(intercept.df, aes(x=site, y=intercept, color=site)) + 
-  theme_classic() +
-  scale_color_brewer(palette="Set1") +
-  geom_errorbar(aes(ymin=lb, ymax=ub), width=.1) +
-  geom_line() +
-  geom_hline(yintercept = 0, linetype="dashed") +
-  geom_point(pch=1,size=3) +
-  theme(axis.text.x=element_blank()) +
-  # geom_text(data=subset(mod1, mod1$term=="slope_temp"), y = -0.75, label = "***") +
-  ylab(expression("intercept")) +
-  xlab(element_blank()) +
-  labs(color="site") 
-
-pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s5.pdf", width=6, height=5)
-s5
-dev.off()
-
 # write temp dfs
 temp_change(file_path = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/brazil_filtered.csv",
             site_name = "Brazil",
+            months = "SUMMER",
             output_path = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/brazil_temps.csv")
 temp_change(file_path = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/panama_filtered.csv",
             site_name = "Panama",
+            months = "SUMMER",
             output_path = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/panama_temps.csv")
 temp_change(file_path = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/guanica_filtered.csv",
             site_name = "Guanica",
+            months = "SUMMER",
             output_path = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/guanica_temps.csv")
 temp_change(file_path = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/powdermill_filtered.csv",
             site_name = "Powdermill",
+            months = "SUMMER",
             output_path = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/powdermill_temps.csv")
 temp_change(file_path = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/palo_filtered.csv",
             site_name = "Palomarin",
+            months = "SUMMER",
             output_path = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/palo_temps.csv")
 temp_change(file_path = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/tss_filtered.csv",
             site_name = "Teton",
+            months = "SUMMER",
             output_path = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/tss_temps.csv")
 temp_change(file_path = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/wate_filtered.csv",
             site_name = "Waterfall",
+            months = "SUMMER",
             output_path = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/wate_temps.csv")
 
 # load files
@@ -673,40 +672,48 @@ temp_df <- rbind.data.frame(brazil_temps, panama_temps, guanica_temps,
                             powdermill_temps, palo_temps, tss_temps, wate_temps)
 
 # temp plot
-temp1 <- ggplot(data=temp_df, aes(year, MAT, color=species))+
+temp1 <- ggplot(data=temp_df, aes(year, MAT))+
   theme_bw() +
   theme(legend.position="none",
         strip.background = element_blank()) +
   ylab("mean annual temperature (°C)") +
-  geom_smooth(method='lm', se = FALSE) +
+  stat_smooth(geom='line', alpha=0.25, method='lm', aes(color=species)) +
+  geom_smooth(method='lm', se = FALSE, color="black") +
   facet_wrap(~site, scales="free_y")
 
 
-pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s6.pdf", width=6, height=5)
+pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s5.pdf", width=6, height=5)
 temp1
 dev.off()
 
 # write precip dfs
 precip_change(file_path = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/brazil_filtered.csv",
               site_name = "Brazil",
+              months = "SUMMER",
               output_path = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/brazil_precips.csv")
 precip_change(file_path = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/panama_filtered.csv",
               site_name = "Panama",
+              months = "SUMMER",
               output_path = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/panama_precips.csv")
 precip_change(file_path = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/guanica_filtered.csv",
               site_name = "Guanica",
+              months = "SUMMER",
               output_path = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/guanica_precips.csv")
 precip_change(file_path = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/powdermill_filtered.csv",
               site_name = "Powdermill",
+              months = "SUMMER",
               output_path = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/powdermill_precips.csv")
 precip_change(file_path = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/palo_filtered.csv",
               site_name = "Palomarin",
+              months = "SUMMER",
               output_path = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/palo_precips.csv")
 precip_change(file_path = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/tss_filtered.csv",
               site_name = "Teton",
+              months = "SUMMER",
               output_path = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/tss_precips.csv")
 precip_change(file_path = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/wate_filtered.csv",
               site_name = "Waterfall",
+              months = "SUMMER",
               output_path = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/wate_precips.csv")
 
 # load files
@@ -739,16 +746,61 @@ precip_df <- rbind.data.frame(brazil_precips, panama_precips, guanica_precips,
                               powdermill_precips, palo_precips, tss_precips, wate_precips)
 
 # precip plot
-precip1 <- ggplot(data=precip_df, aes(year, MAT, color=species))+
+precip1 <- ggplot(data=precip_df, aes(year, MAT))+
   theme_bw() +
   theme(legend.position="none",
         strip.background = element_blank()) +
-  ylab("mean monthly precipation (cm)") +
-  geom_smooth(method='lm', se = FALSE) +
+  ylab("mean annual precipation (cm)") +
+  stat_smooth(geom='line', alpha=0.25, method='lm', aes(color=species)) +
+  geom_smooth(method='lm', se = FALSE, color="black") +
   facet_wrap(~site, scales="free_y")
 
 
-pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s7.pdf", width=6, height=5)
+pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s6.pdf", width=6, height=5)
 precip1
+dev.off()
+
+# distribution of mass change plot
+slope_dist <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/all_analysis_df.csv")
+slope_dist$site[slope_dist$lat %in% unique(slope_dist$lat)[1]] <- 'brazil'
+slope_dist$site[slope_dist$lat %in% unique(slope_dist$lat)[2]] <- 'panama'
+slope_dist$site[slope_dist$lat %in% unique(slope_dist$lat)[3]] <- 'guanica'
+slope_dist$site[slope_dist$lat %in% unique(slope_dist$lat)[4]] <- 'palomarin'
+slope_dist$site[slope_dist$lat %in% unique(slope_dist$lat)[5]] <- 'powdermill'
+slope_dist$site[slope_dist$lat %in% unique(slope_dist$lat)[6]] <- 'waterfall'
+slope_dist$site[slope_dist$lat %in% unique(slope_dist$lat)[7]] <- 'teton'
+
+slope_dist_plot <- ggplot(data=slope_dist, aes(x=site, y=slope_mass)) +
+  theme_bw() +
+  theme(strip.background = element_blank()) +
+  geom_boxplot(alpha=0.7, aes(fill=site)) +
+  geom_jitter(pch=21, alpha=0.5) +
+  ylab("slope change in mass") +
+  xlab("site") +
+  ylim(-0.3,0.3)
+
+pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s7.pdf", width=6, height=5)
+slope_dist_plot
+dev.off()
+
+# correlated temp and precip plot
+climate_corr <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/all_analysis_df.csv")
+climate_corr$site[climate_corr$lat %in% unique(climate_corr$lat)[1]] <- 'brazil'
+climate_corr$site[climate_corr$lat %in% unique(climate_corr$lat)[2]] <- 'panama'
+climate_corr$site[climate_corr$lat %in% unique(climate_corr$lat)[3]] <- 'guanica'
+climate_corr$site[climate_corr$lat %in% unique(climate_corr$lat)[4]] <- 'palomarin'
+climate_corr$site[climate_corr$lat %in% unique(climate_corr$lat)[5]] <- 'powdermill'
+climate_corr$site[climate_corr$lat %in% unique(climate_corr$lat)[6]] <- 'waterfall'
+climate_corr$site[climate_corr$lat %in% unique(climate_corr$lat)[7]] <- 'teton'
+
+corr <- ggplot(data=climate_corr, aes(x=slope_temp, y=slope_precip, color=site)) +
+  theme_bw() +
+  theme(strip.background = element_blank()) +
+  geom_point() +
+  ylab("change mean annual precipation") +
+  xlab("change mean annual temperature") 
+  
+pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s8.pdf", width=6, height=5)
+corr
 dev.off()
 
