@@ -621,7 +621,8 @@ slope_dist$site[slope_dist$lat %in% unique(slope_dist$lat)[4]] <- 'Palomarin'
 slope_dist$site[slope_dist$lat %in% unique(slope_dist$lat)[5]] <- 'Powdermill'
 slope_dist$site[slope_dist$lat %in% unique(slope_dist$lat)[6]] <- 'Waterfall'
 slope_dist$site[slope_dist$lat %in% unique(slope_dist$lat)[7]] <- 'Teton'
-
+slope_dist$site <- factor(slope_dist$site, levels=c("Brazil", "Panama", "Guanica", "Palomarin", 
+                                                    "Powdermill", "Waterfall", "Teton"))
 slope_dist_plot <- ggplot(data=slope_dist, aes(x=site, y=slope_mass)) +
   theme_bw() +
   theme(strip.background = element_blank(),
@@ -640,6 +641,8 @@ dev.off()
 slope_dist$tropical <- 0
 slope_dist[abs(slope_dist$lat)<22,]$tropical <- 1
 slope_dist$tropical <- as.factor(slope_dist$tropical)
+slope_dist$site <- factor(slope_dist$site, levels=c("Brazil", "Panama", "Guanica", "Palomarin", 
+                                                    "Powdermill", "Waterfall", "Teton"))
 slope_dist_plot_alt <- ggplot(data=slope_dist, aes(x=site, y=slope_mass)) +
   theme_bw() +
   theme(strip.background = element_blank(),
@@ -655,7 +658,6 @@ slope_dist_plot_alt <- ggplot(data=slope_dist, aes(x=site, y=slope_mass)) +
 pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/fig2_alt.pdf", width=6, height=5)
 slope_dist_plot_alt
 dev.off()
-
 
 # write temp dfs
 temp_change(file_path = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/brazil_filtered.csv",
