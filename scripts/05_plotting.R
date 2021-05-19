@@ -612,6 +612,51 @@ pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/figure_1_component
 p4
 dev.off()
 
+# figure 2: distribution of mass change plot
+slope_dist <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/all_analysis_df.csv")
+slope_dist$site[slope_dist$lat %in% unique(slope_dist$lat)[1]] <- 'Brazil'
+slope_dist$site[slope_dist$lat %in% unique(slope_dist$lat)[2]] <- 'Panama'
+slope_dist$site[slope_dist$lat %in% unique(slope_dist$lat)[3]] <- 'Guanica'
+slope_dist$site[slope_dist$lat %in% unique(slope_dist$lat)[4]] <- 'Palomarin'
+slope_dist$site[slope_dist$lat %in% unique(slope_dist$lat)[5]] <- 'Powdermill'
+slope_dist$site[slope_dist$lat %in% unique(slope_dist$lat)[6]] <- 'Waterfall'
+slope_dist$site[slope_dist$lat %in% unique(slope_dist$lat)[7]] <- 'Teton'
+
+slope_dist_plot <- ggplot(data=slope_dist, aes(x=site, y=slope_mass)) +
+  theme_bw() +
+  theme(strip.background = element_blank(),
+        legend.position = "none") +
+  geom_boxplot(alpha=0.7, aes(fill=site)) +
+  geom_jitter(pch=21, alpha=0.5) +
+  ylab(expression(paste(Delta," Mass"))) +
+  xlab("Site") +
+  ylim(-0.3,0.3)
+
+pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/fig2.pdf", width=6, height=5)
+slope_dist_plot
+dev.off()
+
+# alternative version with tropical / temperate color-coding
+slope_dist$tropical <- 0
+slope_dist[abs(slope_dist$lat)<22,]$tropical <- 1
+slope_dist$tropical <- as.factor(slope_dist$tropical)
+slope_dist_plot_alt <- ggplot(data=slope_dist, aes(x=site, y=slope_mass)) +
+  theme_bw() +
+  theme(strip.background = element_blank(),
+        legend.title = element_blank()) +
+  geom_boxplot(alpha=0.7, aes(fill=tropical)) +
+  scale_fill_manual(values=c("dodgerblue1","orangered2"),
+                    labels=c("Temperate","Tropical")) +
+  geom_jitter(pch=21, alpha=0.5) +
+  ylab(expression(paste(Delta," Mass"))) +
+  xlab("Site") +
+  ylim(-0.3,0.3)
+
+pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/fig2_alt.pdf", width=6, height=5)
+slope_dist_plot_alt
+dev.off()
+
+
 # write temp dfs
 temp_change(file_path = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/brazil_filtered.csv",
             site_name = "Brazil",
@@ -760,29 +805,6 @@ pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s6.pdf", width=6, 
 precip1
 dev.off()
 
-# distribution of mass change plot
-slope_dist <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/all_analysis_df.csv")
-slope_dist$site[slope_dist$lat %in% unique(slope_dist$lat)[1]] <- 'brazil'
-slope_dist$site[slope_dist$lat %in% unique(slope_dist$lat)[2]] <- 'panama'
-slope_dist$site[slope_dist$lat %in% unique(slope_dist$lat)[3]] <- 'guanica'
-slope_dist$site[slope_dist$lat %in% unique(slope_dist$lat)[4]] <- 'palomarin'
-slope_dist$site[slope_dist$lat %in% unique(slope_dist$lat)[5]] <- 'powdermill'
-slope_dist$site[slope_dist$lat %in% unique(slope_dist$lat)[6]] <- 'waterfall'
-slope_dist$site[slope_dist$lat %in% unique(slope_dist$lat)[7]] <- 'teton'
-
-slope_dist_plot <- ggplot(data=slope_dist, aes(x=site, y=slope_mass)) +
-  theme_bw() +
-  theme(strip.background = element_blank()) +
-  geom_boxplot(alpha=0.7, aes(fill=site)) +
-  geom_jitter(pch=21, alpha=0.5) +
-  ylab("slope change in mass") +
-  xlab("site") +
-  ylim(-0.3,0.3)
-
-pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s7.pdf", width=6, height=5)
-slope_dist_plot
-dev.off()
-
 # correlated temp and precip plot
 climate_corr <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/all_analysis_df.csv")
 climate_corr$site[climate_corr$lat %in% unique(climate_corr$lat)[1]] <- 'brazil'
@@ -800,7 +822,7 @@ corr <- ggplot(data=climate_corr, aes(x=slope_temp, y=slope_precip, color=site))
   ylab("change mean annual precipation") +
   xlab("change mean annual temperature") 
   
-pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s8.pdf", width=6, height=5)
+pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s7.pdf", width=6, height=5)
 corr
 dev.off()
 
