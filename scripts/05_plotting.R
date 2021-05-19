@@ -9,6 +9,7 @@ library(ggspatial)
 library(ggtree)
 library(stringr)
 library(tidyverse)
+library(RColorBrewer)
 source("~/Dropbox/Bird_body_size-analysis/bird_body_size/scripts/00_functions.R")
 
 # load brazil data
@@ -623,17 +624,26 @@ slope_dist$site[slope_dist$lat %in% unique(slope_dist$lat)[6]] <- 'Waterfall'
 slope_dist$site[slope_dist$lat %in% unique(slope_dist$lat)[7]] <- 'Teton'
 slope_dist$site <- factor(slope_dist$site, levels=c("Brazil", "Panama", "Guanica", "Palomarin", 
                                                     "Powdermill", "Waterfall", "Teton"))
+slope_dist$lat <- as.numeric(as.character(slope_dist$lat))
 slope_dist_plot <- ggplot(data=slope_dist, aes(x=site, y=slope_mass)) +
   theme_bw() +
-  theme(strip.background = element_blank(),
-        legend.position = "none") +
-  geom_boxplot(alpha=0.7, aes(fill=site)) +
+  theme(strip.background = element_blank()) +
+  geom_boxplot(alpha=0.7, aes(fill=abs(lat)))+
+  scale_fill_gradient(
+    low = 'firebrick', high = 'dodgerblue') + 
   geom_jitter(pch=21, alpha=0.5) +
-  ylab(expression(paste(Delta," Mass"))) +
+  ylab(expression(paste(Delta," Mass (g/yr)"))) +
+  annotate("segment", x = 3, xend = 1, y = 0.25, yend = 0.25,
+           colour = "black", size = 0.65, arrow = arrow(type = "closed", length = unit(0.25, "cm"))) +
+  annotate("text", x = 2, y = 0.3, label = "Tropical", size = 4) +
+  annotate("segment", x = 5, xend = 7, y = 0.25, yend = 0.25,
+           colour = "black", size = 0.65, arrow = arrow(type = "closed", length = unit(0.25, "cm"))) +
+  annotate("text", x = 6, y = 0.3, label = "Temperate", size=4) +
   xlab("Site") +
-  ylim(-0.3,0.3)
+  ylim(-0.3,0.3) +
+  labs(fill="abs(Latitude)")
 
-pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/fig2.pdf", width=6, height=5)
+pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/fig2.pdf", width=7, height=5)
 slope_dist_plot
 dev.off()
 
@@ -646,12 +656,17 @@ slope_dist$site <- factor(slope_dist$site, levels=c("Brazil", "Panama", "Guanica
 slope_dist_plot_alt <- ggplot(data=slope_dist, aes(x=site, y=slope_mass)) +
   theme_bw() +
   theme(strip.background = element_blank(),
-        legend.title = element_blank()) +
-  geom_boxplot(alpha=0.7, aes(fill=tropical)) +
-  scale_fill_manual(values=c("dodgerblue1","orangered2"),
-                    labels=c("Temperate","Tropical")) +
+        legend.title = element_blank(),
+        legend.position = "none") +
+  geom_boxplot(alpha=0.7, aes(fill=site)) +
   geom_jitter(pch=21, alpha=0.5) +
-  ylab(expression(paste(Delta," Mass"))) +
+  ylab(expression(paste(Delta," Mass (g/yr)"))) +
+  annotate("segment", x = 3, xend = 1, y = 0.25, yend = 0.25,
+           colour = "black", size = 0.65, arrow = arrow(type = "closed", length = unit(0.25, "cm"))) +
+  annotate("text", x = 2, y = 0.3, label = "Tropical", size = 4) +
+  annotate("segment", x = 5, xend = 7, y = 0.25, yend = 0.25,
+           colour = "black", size = 0.65, arrow = arrow(type = "closed", length = unit(0.25, "cm"))) +
+  annotate("text", x = 6, y = 0.3, label = "Temperate", size=4) +
   xlab("Site") +
   ylim(-0.3,0.3)
 
