@@ -200,3 +200,10 @@ female.df$species %>% unique() %>% length() # 142 unique species
 nrow(combined.df) # 326 total records
 combined.df$species %>% unique() %>% length() # 149 unique species
 
+# get first year for each locality
+for(i in unique(combined.df$SITE)){
+  print(i)
+  tmp <- combined.df[combined.df$SITE==i,]
+  tmp$starting_year %>% min() %>% print()
+}
+

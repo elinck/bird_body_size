@@ -499,8 +499,8 @@ precip_change <- function(file_path, site_name, months=c("ALL","SUMMER"), output
   
   # subset precip and precip data, merge with df
   data.precips <- cbind.data.frame(precip.df$year, precip.df[,colnames(precip.df)==site_name])
-  colnames(data.precips) <- c("year", "MAT")
-  data.precips$MAT <- as.numeric(as.character(data.precips$MAT))
+  colnames(data.precips) <- c("year", "MAP")
+  data.precips$MAP <- as.numeric(as.character(data.precips$MAP))
   data.all <- merge(data.all, data.precips, by.x="year", by.y="year", all.y=FALSE)
   
   # export file

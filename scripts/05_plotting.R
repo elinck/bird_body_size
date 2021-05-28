@@ -738,7 +738,7 @@ temp1 <- ggplot(data=temp_df, aes(year, MAT))+
   theme_bw() +
   theme(legend.position="none",
         strip.background = element_blank()) +
-  ylab("mean annual temperature (°C)") +
+  ylab("mean monthly temperature (°C)") +
   stat_smooth(geom='line', alpha=0.25, method='lm', aes(color=species)) +
   geom_smooth(method='lm', se = FALSE, color="black") +
   facet_wrap(~site, scales="free_y")
@@ -788,19 +788,19 @@ tss_precips <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/t
 wate_precips <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/wate_precips.csv")[-1]
 
 # subset columns; add ID col
-brazil_precips <- brazil_precips[,c("year", "MAT", "species")]
+brazil_precips <- brazil_precips[,c("year", "MAP", "species")]
 brazil_precips$site <- "brazil"
-panama_precips <- panama_precips[,c("year", "MAT", "species")]
+panama_precips <- panama_precips[,c("year", "MAP", "species")]
 panama_precips$site <- "panama"
-guanica_precips <- guanica_precips[,c("year", "MAT", "species")]
+guanica_precips <- guanica_precips[,c("year", "MAP", "species")]
 guanica_precips$site <- "guanica"
-powdermill_precips <- powdermill_precips[,c("year", "MAT", "species")]
+powdermill_precips <- powdermill_precips[,c("year", "MAP", "species")]
 powdermill_precips$site <- "powdermill"
-palo_precips <- palo_precips[,c("year", "MAT", "species")]
+palo_precips <- palo_precips[,c("year", "MAP", "species")]
 palo_precips$site <- "palomarin"
-tss_precips <- tss_precips[,c("year", "MAT", "species")]
+tss_precips <- tss_precips[,c("year", "MAP", "species")]
 tss_precips$site <- "teton"
-wate_precips <- wate_precips[,c("year", "MAT", "species")]
+wate_precips <- wate_precips[,c("year", "MAP", "species")]
 wate_precips$site <- "waterfall"
 
 # merge
@@ -808,11 +808,11 @@ precip_df <- rbind.data.frame(brazil_precips, panama_precips, guanica_precips,
                               powdermill_precips, palo_precips, tss_precips, wate_precips)
 
 # precip plot
-precip1 <- ggplot(data=precip_df, aes(year, MAT))+
+precip1 <- ggplot(data=precip_df, aes(year, MAP))+
   theme_bw() +
   theme(legend.position="none",
         strip.background = element_blank()) +
-  ylab("mean annual precipation (cm)") +
+  ylab("mean monthly precipation (cm)") +
   stat_smooth(geom='line', alpha=0.25, method='lm', aes(color=species)) +
   geom_smooth(method='lm', se = FALSE, color="black") +
   facet_wrap(~site, scales="free_y")
@@ -836,10 +836,75 @@ corr <- ggplot(data=climate_corr, aes(x=slope_temp, y=slope_precip, color=site))
   theme_bw() +
   theme(strip.background = element_blank()) +
   geom_point() +
-  ylab("change mean annual precipation") +
-  xlab("change mean annual temperature") 
+  ylab("change mean monthly precipation") +
+  xlab("change mean monthly temperature") 
   
 pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s7.pdf", width=6, height=5)
 corr
 dev.off()
+
+# evaluate guanica anomaly
+precip.df <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/precip_data.csv")
+regexp <- "[[:digit:]]+" #regex to extract year from column names
+colnames(precip.df) <- c("site",str_extract(colnames(precip.df), regexp)[-1]) #rename columns
+site <- as.vector(as.character(precip.df$site))
+
+# load lat long data
+latlong.df <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/latlong.csv")
+
+# reformat
+precip.df <- subset(precip.df, select = -c(site))
+x <- as.data.frame(precip.df)
+precip.df <- as.data.frame(lapply(split(as.list(x),
+                                        f = colnames(x)),
+                                  function(x) Reduce(`+`, x) / length(x)))
+precip.df <- cbind.data.frame(site,precip.df)
+
+# transpose 
+precip.df <- precip.df %>%
+  rownames_to_column %>% 
+  gather(var, value, -rowname) %>% 
+  spread(rowname, value) 
+cols <- precip.df[1,]
+cols[1] <- "year"
+rownames(precip.df) <- NULL
+colnames(precip.df) <- NULL
+precip.df <- precip.df[-1,]
+colnames(precip.df) <- cols
+
+# tropics precip precip (all months)
+all_precip.df <- precip.df
+all_precip.df$year <- str_extract(all_precip.df$year, regexp) #rename columns
+all_precip.df$year <- as.numeric(all_precip.df$year)
+all_precip.df <- all_precip.df %>% mutate_if(is.character,as.numeric)
+all_precip.df <- all_precip.df %>%
+  group_by(year) %>% 
+  summarise_at(vars("Powdermill","Teton","Waterfall",
+                    "Panama","Brazil","Puerto Rico","Palomarin","Guanica"), mean)
+
+#read and format noaa data
+noaa <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/noaa_coop_precip.csv")
+noaa$date_time <-  as.POSIXct(noaa$DATE, format="%Y%m%d %H:%M") %>% as.character() %>% unlist()
+noaa$date_num <- strsplit(noaa$date_time, "-")
+noaa$time <- strsplit(noaa$date_time, "\\s+")
+noaa$year <- lapply(noaa$date_num, `[[`, 1) %>% unlist() %>% as.numeric()
+noaa$month <- lapply(noaa$date_num, `[`, 2) %>% unlist()  %>% as.numeric()
+noaa$time <- lapply(noaa$time, `[`, 2) %>% unlist()
+ponce <- noaa[noaa$STATION_NAME=="PONCE 4 E US",]
+noaa_df <- list()
+for(i in 1:ponce$year){
+  tmp <- ponce[ponce$year==i,]
+  tmp <- tmp %>% group_by(year, month) %>%
+    summarise_at(vars("HPCP"), sum)
+  
+  
+}
+
+# visualize
+ggplot(all_precip.df, aes(x=year, y=Guanica)) +
+  theme_classic() +
+  geom_line(col="black") +
+  geom_smooth(data=all_precip.df[all_precip.df$year<1975,])
+  xlab("Year") +
+  ylab("Mean Monthly Precipitation (cm)")
 
