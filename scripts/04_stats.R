@@ -207,3 +207,10 @@ for(i in unique(combined.df$SITE)){
   tmp$starting_year %>% min() %>% print()
 }
 
+# get last year for each locality
+for(i in unique(combined.df$SITE)){
+  print(i)
+  tmp <- combined.df[combined.df$SITE==i,]
+  tmp$ending_year %>% max() %>% print()
+}
+
