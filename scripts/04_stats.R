@@ -181,7 +181,7 @@ write_csv(m5.combined.write, "~/Dropbox/Bird_body_size-analysis/bird_body_size/d
 
 # combined sexes, interaction but not constituent terms: this is the model we focus on in the manuscript!
 m6.combined_SMass_centered <- rma.mv(yi = slope_mass, V = se_mass^2,
-                                     mods = ~scale(starting_mass,scale=F) + Sex + slope_precip + slope_temp + abs(lat):slope_temp,
+                                     mods = ~scale(starting_mass,scale=F) + Sex + slope_precip + abs(lat)*slope_temp,
                                      random = list(~1 | SITE, ~1 | species), R = list(species = cor),
                                      method="REML", data=combined.df)				
 
