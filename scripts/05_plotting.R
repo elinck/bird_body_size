@@ -825,7 +825,7 @@ precip2 <- ggplot(final_precip.df, aes(x=year,y=MAT)) +
   geom_point() +
   geom_smooth(method="lm") +
   facet_wrap(~ site, scales="free_y") +
-  ylab("mean annual temperature (°C)") +
+  ylab("mean monthly precipitation (cm)") +
   xlab("year")
 
 pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s8.pdf", width=6, height=5)
