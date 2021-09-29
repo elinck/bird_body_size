@@ -98,6 +98,12 @@ all_precip.df <- all_precip.df %>%
   summarise_at(vars("Powdermill","Teton","Waterfall",
                     "Panama","Brazil","Puerto Rico","Palomarin","Guanica"), mean)
 
+# write climate data to visualize broad trends
+write.csv(all_temps.df, "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/all_temps.csv")
+write.csv(all_precip.df, "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/all_precip.csv")
+write.csv(summer_temps.df, "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/summer_temps.csv")
+write.csv(summer_precip.df, "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/summer_precip.csv")
+
 # load phylogenies
 # supertree <-read.tree("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/AllBirdsHackett1.tre")
 # find maximum clade credibility tree

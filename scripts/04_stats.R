@@ -2,6 +2,9 @@ library(ape)
 library(metafor)
 library(broom)
 library(tidyverse)
+library(phytools)
+library(MuMIn)
+eval(metafor:::.MuMIn)
 
 # set wd
 setwd('~/Dropbox/Bird_body_size-analysis/bird_body_size/data')
@@ -190,6 +193,29 @@ m6.combined.write$ci.lb <- m6.combined_SMass_centered$ci.lb
 m6.combined.write$ci.ub <- m6.combined_SMass_centered$ci.ub
 write_csv(m6.combined.write, "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/stats_with_fragments/m6.combined.csv")
 
+# w/ lat and precip interaction
+m7.combined_SMass_centered <- rma.mv(yi = slope_mass, V = se_mass^2,
+                                     mods = ~scale(starting_mass,scale=F) + Sex + slope_precip + abs(lat)*slope_temp + abs(lat)*slope_precip,
+                                     random = list(~1 | SITE, ~1 | species), R = list(species = cor),
+                                     method="REML", data=combined.df)				
+
+m7.combined.write <- tidy(m7.combined_SMass_centered)
+m7.combined.write$ci.lb <- m7.combined_SMass_centered$ci.lb
+m7.combined.write$ci.ub <- m7.combined_SMass_centered$ci.ub
+write_csv(m7.combined.write, "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/stats_with_fragments/m7.combined.csv")
+
+# w/ lat and precip interaction, plus mass and temp: 
+m8.combined_SMass_centered <- rma.mv(yi = slope_mass, V = se_mass^2,
+                                     mods = ~scale(starting_mass,scale=F) + Sex + slope_precip + abs(lat)*slope_temp + abs(lat)*slope_precip + ~scale(starting_mass,scale=F)*slope_temp, 
+                                     random = list(~1 | SITE, ~1 | species), R = list(species = cor),
+                                     method="REML", data=combined.df)				
+
+m8.combined.write <- tidy(m8.combined_SMass_centered)
+m8.combined.write$ci.lb <- m8.combined_SMass_centered$ci.lb
+m8.combined.write$ci.ub <- m8.combined_SMass_centered$ci.ub
+write_csv(m8.combined.write, "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/stats_with_fragments/m8.combined.csv")
+
+
 # data summary
 nrow(master.df) # 294 total records
 master.df$species %>% unique() %>% length() # 240 unique species
@@ -213,4 +239,52 @@ for(i in unique(combined.df$SITE)){
   tmp <- combined.df[combined.df$SITE==i,]
   tmp$ending_year %>% max() %>% print()
 }
+
+
+# calculate phylogenetic signal
+master_reduced <- distinct(master.df, species, .keep_all= TRUE)
+rownames(master_reduced) <- master_reduced$species
+
+## extract characters of interest
+delta_mass <-setNames(master_reduced$slope_mass,
+                          rownames(master_reduced))
+
+## compute phylogenetic signal lambda
+lambda.slope_mass<-phylosig(master.tree, delta_mass,
+                          method="lambda",test=TRUE)
+
+print(lambda.slope_mass)
+
+## write to supplement
+pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s11.pdf")
+plot(lambda.slope_mass)
+dev.off()
+
+# model selection: round 1
+mods1 <- dredge(m7.combined_SMass_centered, trace=2)
+subset(mods1, delta <=5, recalc.weights=FALSE)
+importance(mods1)
+
+# model selection: round 2
+mods2 <- dredge(m6.combined_SMass_centered, trace=2)
+subset(mods2, delta <=5, recalc.weights=FALSE)
+importance(mods2)
+
+# model selection: round 4
+mods3 <- dredge(m6.combined_SMass_centered, trace=2)
+subset(mods3, delta <=5, recalc.weights=FALSE)
+importance(mods3)
+
+# model selection: round 4
+mods4 <- dredge(m6.combined_SMass_centered, trace=2)
+subset(mods4, delta <=5, recalc.weights=FALSE)
+importance(mods4)
+
+# model selection: round 4b
+mods4b <- dredge(m7.combined_SMass_centered, trace=2)
+subset(mods4b, delta <=5, recalc.weights=FALSE)
+importance(mods4b)
+
+
+
 

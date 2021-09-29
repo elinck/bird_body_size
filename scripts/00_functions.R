@@ -2,6 +2,7 @@
 clean_data <- function(file_path, output_path, drop_juveniles=FALSE, drop_frags=FALSE,
                        sex=c("MALES","FEMALES","ALL"), 
                        climate=c("TEMPERATE","TROPICAL"), 
+                       migratory_status=c("ALL","NON","SHORT"),
                        brazil=FALSE,
                        s_dev=4,
                        sample_size_parameter=5){
@@ -18,7 +19,7 @@ clean_data <- function(file_path, output_path, drop_juveniles=FALSE, drop_frags=
   if (climate=="TROPICAL" & brazil==TRUE){data.df <- data.full[,c("Updated.Scientific.Name","Month","Year","Band.Number",
                                                                    "Sex","Age","Mass","Wing.Length","Tarsus","Migratory.Status","Date","Reserve.Code")]}
   if (climate=="TEMPERATE"){data.df <- data.full[,c("Updated.Scientific.Name","Month","Year","Band.Number",
-                                                   "Sex","Age","Mass","Wing.Length","Tarsus")]}
+                                                   "Sex","Age","Mass","Wing.Length","Tarsus","Migratory.Status")]}
   
   # drop non-primary forest sites in Brazil
   if (brazil==TRUE & drop_frags==TRUE){
@@ -62,6 +63,11 @@ clean_data <- function(file_path, output_path, drop_juveniles=FALSE, drop_frags=
   if (climate=="TROPICAL") {data.df <- data.df[data.df$Migratory.Status=="non",]} 
   if (climate=="TEMPERATE") {data.df <- data.df[data.df$Month %in% c(6,7),]}
   
+  # select migratory status
+  if (migratory_status=="ALL") {data.df <- data.df} 
+  if (migratory_status=="NON") {data.df <- data.df[data.df$Migratory.Status=="non",]} 
+  if (migratory_status=="SHORT") {data.df <- data.df[!data.df$Migratory.Status=="long",]} 
+  
   # order by month and year, drop bad data
   data.df <- data.df[order(data.df$Year, data.df$Month),]
 
@@ -75,7 +81,7 @@ clean_data <- function(file_path, output_path, drop_juveniles=FALSE, drop_frags=
   if(sum(is.na(data.df$Band.Number))!=nrow(data.df)) {data.df <- data.df[!duplicated(data.df$Band.Number),]}
 
   # rename columns
-  colnames(data.df) <- c("species","month","year","band_no","sex","age","mass","wing_length","tarsus")
+  colnames(data.df) <- c("species","month","year","band_no","sex","age","mass","wing_length","tarsus", "migratory_status")
   
   # make sure all species are represented by changing to character
   data.df$species <- as.character(data.df$species)
@@ -128,7 +134,7 @@ clean_data <- function(file_path, output_path, drop_juveniles=FALSE, drop_frags=
 
 make_stats_df <- function(file_path, site_name, output_path, 
                           months=c("ALL","SUMMER"),
-                          climate_regression_years=c("ALL","SAMPLED")){
+                          climate_regression_years=c("ALL","SAMPLED", "SITE")){
   
   # load data 
   data.all <- read.csv(file = file_path, fileEncoding="latin1")[-1]
@@ -150,6 +156,23 @@ make_stats_df <- function(file_path, site_name, output_path,
   # merge datasets
   data.all <- merge(data.all, data.temps, by.x="year", by.y="year", all.y=FALSE)
   data.all <- merge(data.all, data.precip, by.x="year", by.y="year", all.y=FALSE)
+  
+  # get general climate trends
+  mod.temp.gen <- lm(MAT ~ year, data.all) # simple regression for temp change
+  mod.temp.sum.gen <- summary(mod.temp.gen)
+  slope.temp.gen <- mod.temp.sum.gen$coefficients[2,1] # get temp slope
+  r2.temp.gen <- mod.temp.sum.gen$r.squared # get temp r-squared
+  min.year <- min(data.all$year)
+  max.year <- max(data.all$year)
+  precip.tmp.gen <- data.precip[data.precip$year %in% seq(min.year, max.year),]
+  mod.precip.gen <- lm(MAP ~ year, precip.tmp.gen) # simple regression for temp change
+  mod.precip.sum.gen <- summary(mod.precip.gen)
+  slope.precip.gen <- mod.precip.sum.gen$coefficients[2,1] # get temp slope
+  r2.precip.gen <- mod.precip.sum.gen$r.squared # get temp r-squared
+  start.temp.gen <- data.all[data.all$year==min.year,]$MAT %>% mean()
+  end.temp.gen <- data.all[data.all$year==max.year,]$MAT %>% mean()
+  start.precip.gen <- data.all[data.all$year==min.year,]$MAP %>% mean()
+  end.precip.gen <- data.all[data.all$year==max.year,]$MAP %>% mean()
   
   # determine climate trends regardless of whether species is sampled
   if(climate_regression_years=="ALL"){
@@ -225,6 +248,32 @@ make_stats_df <- function(file_path, site_name, output_path,
                                           min.year,max.year,
                                           start.temp,end.temp,
                                           start.precip,end.precip)
+    }
+    
+  }
+  
+  # determine climate trends based only on site
+  if(climate_regression_years=="SITE"){
+    
+    # loop to get mean mass change per species
+    data.delta <- list()
+    for(i in unique(data.all$species)){
+      tmp <- data.all[data.all$species==i,]
+      n <- nrow(tmp) # get sample size
+      n.years <- length(unique(tmp$year)) # get number of years
+      min.year <- min(tmp$year)
+      max.year <- max(tmp$year)
+      mass.start <- mean(tmp[tmp$year==min.year,]$mass) # average mass for starting year
+      mod.mass <- lm(mass ~ year, tmp) # simple regression for mass change
+      mod.mass.sum <- summary(mod.mass)
+      slope.mass <- mod.mass.sum$coefficients[2,1] # get mass slope
+      r2.mass <- mod.mass.sum$r.squared # get mass r-squared
+      se.mass <- mod.mass.sum$coefficients[2,2] # get mass SE
+      data.delta[[i]] <- cbind.data.frame(i,n,n.years,slope.mass,r2.mass,se.mass,slope.temp.gen,
+                                          r2.temp.gen,slope.precip.gen,r2.precip.gen,mass.start,
+                                          min.year,max.year,
+                                          start.temp.gen,end.temp.gen,
+                                          start.precip.gen,end.precip.gen)
     }
     
   }

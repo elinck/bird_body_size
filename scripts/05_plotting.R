@@ -10,6 +10,7 @@ library(ggtree)
 library(stringr)
 library(tidyverse)
 library(RColorBrewer)
+library(plyr)
 source("~/Dropbox/Bird_body_size-analysis/bird_body_size/scripts/00_functions.R")
 
 # load brazil data
@@ -417,6 +418,21 @@ pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s2.pdf",width=8,he
 p1
 dev.off()
 
+# plot tarsus vs cube root mass
+corr.tarsus.df$mass_cuberoot <- corr.tarsus.df$mass^(1/3) 
+tarsus_masscuberoot <- ggplot(corr.tarsus.df, aes(x=mass_cuberoot,y=tarsus)) +
+  theme_classic() +
+  geom_point(pch=1,color="#007304",alpha=0.7) +
+  #annotate(geom = 'text', label = tarsus.annotate, x=90, y=Inf, hjust = 0, vjust = 1) +
+  geom_smooth(method = "lm",color="black",linetype="dashed") +
+  xlab("cube root Mass (g)") +
+  ylab("Tarsus (mm)") +
+  facet_wrap(~site, scales="free")
+
+pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s3.pdf",width=8,height=4)
+tarsus_masscuberoot
+dev.off()
+
 q1 <- ggplot(corr.wing.df, aes(x=mass,y=wing_length)) +
   theme_classic() +
   geom_point(pch=1,color="#cc8800",alpha=0.7) +
@@ -426,7 +442,7 @@ q1 <- ggplot(corr.wing.df, aes(x=mass,y=wing_length)) +
   ylab("Wing Length (mm)") +
   facet_wrap(~site, scales="free")
 
-pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s3.pdf",width=8,height=8)
+pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s4.pdf",width=8,height=8)
 q1
 dev.off()
 
@@ -447,7 +463,7 @@ m1 <- ggplot(data = months.df, aes(x=month)) +
     axis.text.x = element_blank(),
     axis.text.y = element_blank()) 
 
-pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s4.pdf",width=6,height=10)
+pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s5.pdf",width=6,height=10)
 m1
 dev.off()
 
@@ -744,8 +760,76 @@ temp1 <- ggplot(data=temp_df, aes(year, MAT))+
   facet_wrap(~site, scales="free_y")
 
 
-pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s5.pdf", width=6, height=5)
+pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s6.pdf", width=6, height=5)
 temp1
+dev.off()
+
+# single climate regression for each site, using summer data for temp sites. temperature to start...
+temperate_sites <- c("Powdermill","Teton","Waterfall","Palomarin")
+tropical_sites <- c("Brazil","Guanica","Panama")
+all_temps.df <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/all_temps.csv")
+all_temps.df <- all_temps.df %>%
+  gather(site, "MAT", 3:10) 
+all_temps.df <- all_temps.df[!all_temps.df$site=="Puerto.Rico",]
+all_temps.df <- all_temps.df[!all_temps.df$site %in% temperate_sites,]
+all_temps.df$site <- factor(all_temps.df$site)
+all_temps.df$site <- revalue(all_temps.df$site, 
+                             c("Brazil"="brazil", "Guanica"="guanica","Panama"="panama"))
+summer_temps.df <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/summer_temps.csv")
+summer_temps.df <- summer_temps.df %>%
+  gather(site, "MAT", 3:10) 
+summer_temps.df <- summer_temps.df[!summer_temps.df$site=="Puerto.Rico",]
+summer_temps.df <- summer_temps.df[!summer_temps.df$site %in% tropical_sites,]
+summer_temps.df$site <- factor(summer_temps.df$site)
+summer_temps.df$site <- revalue(summer_temps.df$site, c("Palomarin"="palomarin",
+                                "Powdermill"="powdermill",
+                                "Teton"="teton","Waterfall"="waterfall"))
+final_temps.df <- rbind.data.frame(all_temps.df, summer_temps.df)
+temp2 <- ggplot(final_temps.df, aes(x=year,y=MAT)) +
+  theme_bw() +
+  theme(legend.position="none",
+        strip.background = element_blank()) +
+  geom_point() +
+  geom_smooth(method="lm") +
+  facet_wrap(~ site, scales="free_y") +
+  ylab("mean annual temperature (°C)") +
+  xlab("year")
+
+pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s7.pdf", width=6, height=5)
+temp2
+dev.off()
+
+# ...now, precip:
+all_precip.df <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/all_precip.csv")
+all_precip.df <- all_precip.df %>%
+  gather(site, "MAT", 3:10) 
+all_precip.df <- all_precip.df[!all_precip.df$site=="Puerto.Rico",]
+all_precip.df <- all_precip.df[!all_precip.df$site %in% temperate_sites,]
+all_precip.df$site <- factor(all_precip.df$site)
+all_precip.df$site <- revalue(all_precip.df$site, 
+                              c("Brazil"="brazil", "Guanica"="guanica","Panama"="panama"))
+summer_precip.df <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/summer_precip.csv")
+summer_precip.df <- summer_precip.df %>%
+  gather(site, "MAT", 3:10) 
+summer_precip.df <- summer_precip.df[!summer_precip.df$site=="Puerto.Rico",]
+summer_precip.df <- summer_precip.df[!summer_precip.df$site %in% tropical_sites,]
+summer_precip.df$site <- factor(summer_precip.df$site)
+summer_precip.df$site <- revalue(summer_precip.df$site, c("Palomarin"="palomarin",
+                                                          "Powdermill"="powdermill",
+                                                          "Teton"="teton","Waterfall"="waterfall"))
+final_precip.df <- rbind.data.frame(all_precip.df, summer_precip.df)
+precip2 <- ggplot(final_precip.df, aes(x=year,y=MAT)) +
+  theme_bw() +
+  theme(legend.position="none",
+        strip.background = element_blank()) +
+  geom_point() +
+  geom_smooth(method="lm") +
+  facet_wrap(~ site, scales="free_y") +
+  ylab("mean annual temperature (°C)") +
+  xlab("year")
+
+pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s8.pdf", width=6, height=5)
+precip2
 dev.off()
 
 # write precip dfs
@@ -818,7 +902,7 @@ precip1 <- ggplot(data=precip_df, aes(year, MAP))+
   facet_wrap(~site, scales="free_y")
 
 
-pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s6.pdf", width=6, height=5)
+pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s9.pdf", width=6, height=5)
 precip1
 dev.off()
 
@@ -839,7 +923,7 @@ corr <- ggplot(data=climate_corr, aes(x=slope_temp, y=slope_precip, color=site))
   ylab("change mean monthly precipation") +
   xlab("change mean monthly temperature") 
   
-pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s7.pdf", width=6, height=5)
+pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s10.pdf", width=6, height=5)
 corr
 dev.off()
 
@@ -882,29 +966,4 @@ all_precip.df <- all_precip.df %>%
   summarise_at(vars("Powdermill","Teton","Waterfall",
                     "Panama","Brazil","Puerto Rico","Palomarin","Guanica"), mean)
 
-#read and format noaa data
-noaa <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/noaa_coop_precip.csv")
-noaa$date_time <-  as.POSIXct(noaa$DATE, format="%Y%m%d %H:%M") %>% as.character() %>% unlist()
-noaa$date_num <- strsplit(noaa$date_time, "-")
-noaa$time <- strsplit(noaa$date_time, "\\s+")
-noaa$year <- lapply(noaa$date_num, `[[`, 1) %>% unlist() %>% as.numeric()
-noaa$month <- lapply(noaa$date_num, `[`, 2) %>% unlist()  %>% as.numeric()
-noaa$time <- lapply(noaa$time, `[`, 2) %>% unlist()
-ponce <- noaa[noaa$STATION_NAME=="PONCE 4 E US",]
-noaa_df <- list()
-for(i in 1:ponce$year){
-  tmp <- ponce[ponce$year==i,]
-  tmp <- tmp %>% group_by(year, month) %>%
-    summarise_at(vars("HPCP"), sum)
-  
-  
-}
-
-# visualize
-ggplot(all_precip.df, aes(x=year, y=Guanica)) +
-  theme_classic() +
-  geom_line(col="black") +
-  geom_smooth(data=all_precip.df[all_precip.df$year<1975,])
-  xlab("Year") +
-  ylab("Mean Monthly Precipitation (cm)")
 
