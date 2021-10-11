@@ -420,6 +420,23 @@ dev.off()
 
 # plot tarsus vs cube root mass
 corr.tarsus.df$mass_cuberoot <- corr.tarsus.df$mass^(1/3) 
+tarsus.mod.g <- lm(tarsus ~ mass_cuberoot, corr.tarsus.df[corr.tarsus.df$site=="guanica",])
+tarsus.mod.pl <- lm(tarsus ~ mass_cuberoot, corr.tarsus.df[corr.tarsus.df$site=="palomarin",])
+tarsus.mod.pm <- lm(tarsus ~ mass_cuberoot, corr.tarsus.df[corr.tarsus.df$site=="panama",])
+tarsus.mod.g <- summary(tarsus.mod.g)
+tarsus.mod.pl <- summary(tarsus.mod.pl)
+tarsus.mod.pm <- summary(tarsus.mod.pm)
+tarsus.r2.g <- tarsus.mod.g$adj.r.squared
+tarsus.r2.pl <- tarsus.mod.pl$adj.r.squared
+tarsus.r2.pm <- tarsus.mod.pm$adj.r.squared
+tarsus.annotate.g <- paste0("R^2=",round(tarsus.r2.g, digits = 4))
+tarsus.annotate.pl <- paste0("R^2=",round(tarsus.r2.pl, digits = 4))
+tarsus.annotate.pm <- paste0("R^2=",round(tarsus.r2.pm, digits = 4))
+dat_text <- data.frame(
+  label = c(tarsus.annotate.g, tarsus.annotate.pl, tarsus.annotate.pm),
+  site   = c("guanica", "palomarin", "panama")
+)
+
 tarsus_masscuberoot <- ggplot(corr.tarsus.df, aes(x=mass_cuberoot,y=tarsus)) +
   theme_classic() +
   geom_point(pch=1,color="#007304",alpha=0.7) +
@@ -427,7 +444,12 @@ tarsus_masscuberoot <- ggplot(corr.tarsus.df, aes(x=mass_cuberoot,y=tarsus)) +
   geom_smooth(method = "lm",color="black",linetype="dashed") +
   xlab("cube root Mass (g)") +
   ylab("Tarsus (mm)") +
-  facet_wrap(~site, scales="free")
+  facet_wrap(~site) +
+  geom_text(
+    data    = dat_text,
+    mapping = aes(x = -Inf, y = -Inf, label = label),
+    hjust   = -0.5,
+    vjust   = -25)
 
 pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s3.pdf",width=8,height=4)
 tarsus_masscuberoot

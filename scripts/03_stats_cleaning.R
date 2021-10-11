@@ -117,19 +117,19 @@ supertree.species <- supertree$tip.label # save vector of species names
 # run dataframe function for Brazil, sex-blind
 make_stats_df(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/brazil_filtered.csv", site_name="Brazil", output_path = 
                 "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/brazil_stats_all.csv",
-              months = "ALL",
+              months = "SUMMER",
               climate_regression_years = "SAMPLED")
 
 # run dataframe function for Panama, sex-blind
 make_stats_df(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/panama_filtered.csv", site_name="Panama", output_path = 
                 "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/panama_stats_all.csv",
-              months = "ALL",
+              months = "SUMMER",
               climate_regression_years = "SAMPLED")
 
 # run dataframe function for Guanica, sex-blind
 make_stats_df(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/guanica_filtered.csv", site_name="Guanica", output_path = 
                 "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/guanica_stats_all.csv",
-              months = "ALL",
+              months = "SUMMER",
               climate_regression_years = "SAMPLED")
 
 # run dataframe function for Powdermill, sex-blind
@@ -159,19 +159,19 @@ make_stats_df(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/w
 # run dataframe function for Brazil, males
 make_stats_df(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/brazil_filtered_males.csv", site_name="Brazil", output_path = 
                 "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/brazil_stats_males.csv",
-              months = "ALL",
+              months = "SUMMER",
               climate_regression_years = "SAMPLED")
 
 # run dataframe function for Panama, males
 make_stats_df(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/panama_filtered_males.csv", site_name="Panama", output_path = 
                 "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/panama_stats_males.csv",
-              months = "ALL",
+              months = "SUMMER",
               climate_regression_years = "SAMPLED")
 
 # run dataframe function for Guanica, males
 make_stats_df(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/guanica_filtered_males.csv", site_name="Guanica", output_path = 
                 "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/guanica_stats_males.csv",
-              months = "ALL",
+              months = "SUMMER",
               climate_regression_years = "SAMPLED")
 
 # run dataframe function for Powdermill, males
@@ -201,19 +201,19 @@ make_stats_df(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/w
 # run dataframe function for Brazil, females
 make_stats_df(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/brazil_filtered_females.csv", site_name="Brazil", output_path = 
                 "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/brazil_stats_females.csv",
-              months = "ALL",
+              months = "SUMMER",
               climate_regression_years = "SAMPLED")
 
 # run dataframe function for Panama, females
 make_stats_df(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/panama_filtered_females.csv", site_name="Panama", output_path = 
                 "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/panama_stats_females.csv",
-              months = "ALL",
+              months = "SUMMER",
               climate_regression_years = "SAMPLED")
 
 # run dataframe function for Guanica, females
 make_stats_df(file_path="~/Dropbox/Bird_body_size-analysis/bird_body_size/data/guanica_filtered_females.csv", site_name="Guanica", output_path = 
                 "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/guanica_stats_females.csv",
-              months = "ALL",
+              months = "SUMMER",
               climate_regression_years = "SAMPLED")
 
 # run dataframe function for Powdermill, females
