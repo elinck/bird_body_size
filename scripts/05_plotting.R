@@ -988,4 +988,26 @@ all_precip.df <- all_precip.df %>%
   summarise_at(vars("Powdermill","Teton","Waterfall",
                     "Panama","Brazil","Puerto Rico","Palomarin","Guanica"), mean)
 
+# figure s12: distribution of starting mass
+mass_dist <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/all_analysis_df.csv")
+mass_dist$site[mass_dist$lat %in% unique(mass_dist$lat)[1]] <- 'Brazil'
+mass_dist$site[mass_dist$lat %in% unique(mass_dist$lat)[2]] <- 'Panama'
+mass_dist$site[mass_dist$lat %in% unique(mass_dist$lat)[3]] <- 'Guanica'
+mass_dist$site[mass_dist$lat %in% unique(mass_dist$lat)[4]] <- 'Palomarin'
+mass_dist$site[mass_dist$lat %in% unique(mass_dist$lat)[5]] <- 'Powdermill'
+mass_dist$site[mass_dist$lat %in% unique(mass_dist$lat)[6]] <- 'Waterfall'
+mass_dist$site[mass_dist$lat %in% unique(mass_dist$lat)[7]] <- 'Teton'
+mass_dist$site <- factor(mass_dist$site, levels=c("Brazil", "Panama", "Guanica", "Palomarin", 
+                                                  "Powdermill", "Waterfall", "Teton"))
+mass_dist$lat <- as.numeric(as.character(mass_dist$lat))
+mass_dist_plot <- ggplot(data=mass_dist, aes(x=site, y=starting_mass)) +
+  theme_bw() +
+  theme(strip.background = element_blank()) +
+  geom_boxplot(alpha=0.7, aes(fill=abs(lat)))+
+  geom_jitter(pch=21, alpha=0.5) +
+  labs(fill="abs(Latitude)") +
+  ylab("starting mass (g)")
 
+pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s12.pdf", width=7, height=5)
+mass_dist_plot
+dev.off()
