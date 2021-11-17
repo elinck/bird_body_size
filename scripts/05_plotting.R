@@ -335,19 +335,19 @@ wate2
 dev.off()
 
 # make master data frame for size correlations
-corr.brazil.df <- cbind.data.frame(brazil.plotting, rep("brazil",nrow(brazil.plotting))) #panama.plotting, guanica.plotting, powdermill.plotting, palo.plotting, wate.plotting)
+corr.brazil.df <- cbind.data.frame(brazil.plotting, rep("Brazil",nrow(brazil.plotting))) #panama.plotting, guanica.plotting, powdermill.plotting, palo.plotting, wate.plotting)
 colnames(corr.brazil.df) <- c("species", "month", "year", "band_no", "sex","age","mass","wing_length","tarsus","period","site")
-corr.panama.df <- cbind.data.frame(panama.plotting, rep("panama",nrow(panama.plotting))) #panama.plotting, guanica.plotting, powdermill.plotting, palo.plotting, wate.plotting)
+corr.panama.df <- cbind.data.frame(panama.plotting, rep("Panama",nrow(panama.plotting))) #panama.plotting, guanica.plotting, powdermill.plotting, palo.plotting, wate.plotting)
 colnames(corr.panama.df) <- c("species", "month", "year", "band_no", "sex","age","mass","wing_length","tarsus","period","site")
-corr.guanica.df <- cbind.data.frame(guanica.plotting, rep("guanica",nrow(guanica.plotting))) #guanica.plotting, guanica.plotting, powdermill.plotting, palo.plotting, wate.plotting)
+corr.guanica.df <- cbind.data.frame(guanica.plotting, rep("Guanica",nrow(guanica.plotting))) #guanica.plotting, guanica.plotting, powdermill.plotting, palo.plotting, wate.plotting)
 colnames(corr.guanica.df) <- c("species", "month", "year", "band_no", "sex","age","mass","wing_length","tarsus","period","site")
 corr.palo.df <- cbind.data.frame(palo.plotting, rep("palo",nrow(palo.plotting))) #palo.plotting, palo.plotting, powdermill.plotting, palo.plotting, wate.plotting)
 colnames(corr.palo.df) <- c("species", "month", "year", "band_no", "sex","age","mass","wing_length","tarsus","period","site")
-corr.powdermill.df <- cbind.data.frame(powdermill.plotting, rep("powdermill",nrow(powdermill.plotting))) #powdermill.plotting, powdermill.plotting, powdermill.plotting, powdermill.plotting, wate.plotting)
+corr.powdermill.df <- cbind.data.frame(powdermill.plotting, rep("Powdermill",nrow(powdermill.plotting))) #powdermill.plotting, powdermill.plotting, powdermill.plotting, powdermill.plotting, wate.plotting)
 colnames(corr.powdermill.df) <- c("species", "month", "year", "band_no", "sex","age","mass","wing_length","tarsus","period","site")
-corr.tss.df <- cbind.data.frame(tss.plotting, rep("tss",nrow(tss.plotting))) #tss.plotting, tss.plotting, tss.plotting, tss.plotting, wate.plotting)
+corr.tss.df <- cbind.data.frame(tss.plotting, rep("TSS",nrow(tss.plotting))) #tss.plotting, tss.plotting, tss.plotting, tss.plotting, wate.plotting)
 colnames(corr.tss.df) <- c("species", "month", "year", "band_no", "sex","age","mass","wing_length","tarsus","period","site")
-corr.wate.df <- cbind.data.frame(wate.plotting, rep("wate",nrow(wate.plotting))) #maps.plotting, maps.plotting, maps.plotting, maps.plotting, wate.plotting)
+corr.wate.df <- cbind.data.frame(wate.plotting, rep("Waterfall",nrow(wate.plotting))) #maps.plotting, maps.plotting, maps.plotting, maps.plotting, wate.plotting)
 colnames(corr.wate.df) <- c("species", "month", "year", "band_no", "sex","age","mass","wing_length","tarsus","period","site")
 corr.master.df <- rbind.data.frame(corr.brazil.df,corr.panama.df,corr.guanica.df,corr.palo.df,corr.powdermill.df,corr.tss.df,corr.wate.df)
 corr.master.df$tarsus <- as.numeric(as.character(corr.master.df$tarsus))
@@ -358,9 +358,9 @@ corr.tarsus.df <- corr.master.df[!is.na(corr.master.df$tarsus),]
 corr.tarsus.df <- corr.tarsus.df[!corr.tarsus.df$tarsus>90,]
 corr.tarsus.df <-corr.tarsus.df[!corr.tarsus.df$tarsus<5,]
 corr.tarsus.df$site <- as.factor(corr.tarsus.df$site)
-corr.tarsus.df$site <- recode(corr.tarsus.df$site, brazil = "brazil", panama = "panama", guanica = "guanica",
-                            powdermill = "powdermill", palo = "palomarin", tss = "teton science school",
-                            wate = "waterfall glen")
+corr.tarsus.df$site <- recode(corr.tarsus.df$site, brazil = "Brazil", panama = "Panama", guanica = "Guanica",
+                            powdermill = "Powdermill", palo = "Palomarin", tss = "Teton Science School",
+                            wate = "Waterfall Glen")
 
 
 tarsus.mod <- lm(tarsus ~ mass, corr.tarsus.df)
@@ -383,9 +383,9 @@ corr.wing.df <- corr.wing.df[!corr.wing.df$wing_length<5,]
 corr.wing.df <- corr.wing.df[!corr.wing.df$wing_length==0,]
 corr.wing.df <-corr.wing.df[!corr.wing.df$wing_length>400,]
 corr.wing.df$site <- as.factor(corr.wing.df$site)
-corr.wing.df$site <- recode(corr.wing.df$site, brazil = "brazil", panama = "panama", guanica = "guanica",
-                       powdermill = "powdermill", palo = "palomarin", tss = "teton science school",
-                       wate = "waterfall glen")
+corr.wing.df$site <- recode(corr.wing.df$site, brazil = "Brazil", panama = "Panama", guanica = "Guanica",
+                       powdermill = "Powdermill", palo = "Palomarin", tss = "Teton Science School",
+                       wate = "Waterfall Glen")
 
 wing.mod <- lm(wing_length ~ mass, corr.wing.df)
 wing.mod <- summary(wing.mod)
@@ -420,9 +420,9 @@ dev.off()
 
 # plot tarsus vs cube root mass
 corr.tarsus.df$mass_cuberoot <- corr.tarsus.df$mass^(1/3) 
-tarsus.mod.g <- lm(tarsus ~ mass_cuberoot, corr.tarsus.df[corr.tarsus.df$site=="guanica",])
-tarsus.mod.pl <- lm(tarsus ~ mass_cuberoot, corr.tarsus.df[corr.tarsus.df$site=="palomarin",])
-tarsus.mod.pm <- lm(tarsus ~ mass_cuberoot, corr.tarsus.df[corr.tarsus.df$site=="panama",])
+tarsus.mod.g <- lm(tarsus ~ mass_cuberoot, corr.tarsus.df[corr.tarsus.df$site=="Guanica",])
+tarsus.mod.pl <- lm(tarsus ~ mass_cuberoot, corr.tarsus.df[corr.tarsus.df$site=="Palomarin",])
+tarsus.mod.pm <- lm(tarsus ~ mass_cuberoot, corr.tarsus.df[corr.tarsus.df$site=="Panama",])
 tarsus.mod.g <- summary(tarsus.mod.g)
 tarsus.mod.pl <- summary(tarsus.mod.pl)
 tarsus.mod.pm <- summary(tarsus.mod.pm)
@@ -434,7 +434,7 @@ tarsus.annotate.pl <- paste0("R^2=",round(tarsus.r2.pl, digits = 4))
 tarsus.annotate.pm <- paste0("R^2=",round(tarsus.r2.pm, digits = 4))
 dat_text <- data.frame(
   label = c(tarsus.annotate.g, tarsus.annotate.pl, tarsus.annotate.pm),
-  site   = c("guanica", "palomarin", "panama")
+  site   = c("Guanica", "Palomarin", "Panama")
 )
 
 tarsus_masscuberoot <- ggplot(corr.tarsus.df, aes(x=mass_cuberoot,y=tarsus)) +
@@ -442,7 +442,7 @@ tarsus_masscuberoot <- ggplot(corr.tarsus.df, aes(x=mass_cuberoot,y=tarsus)) +
   geom_point(pch=1,color="#007304",alpha=0.7) +
   #annotate(geom = 'text', label = tarsus.annotate, x=90, y=Inf, hjust = 0, vjust = 1) +
   geom_smooth(method = "lm",color="black",linetype="dashed") +
-  xlab("cube root Mass (g)") +
+  xlab("Cube root mass (g)") +
   ylab("Tarsus (mm)") +
   facet_wrap(~site) +
   geom_text(
@@ -657,26 +657,27 @@ slope_dist$site[slope_dist$lat %in% unique(slope_dist$lat)[1]] <- 'Brazil'
 slope_dist$site[slope_dist$lat %in% unique(slope_dist$lat)[2]] <- 'Panama'
 slope_dist$site[slope_dist$lat %in% unique(slope_dist$lat)[3]] <- 'Guanica'
 slope_dist$site[slope_dist$lat %in% unique(slope_dist$lat)[4]] <- 'Palomarin'
-slope_dist$site[slope_dist$lat %in% unique(slope_dist$lat)[5]] <- 'Powdermill'
-slope_dist$site[slope_dist$lat %in% unique(slope_dist$lat)[6]] <- 'Waterfall'
-slope_dist$site[slope_dist$lat %in% unique(slope_dist$lat)[7]] <- 'Teton'
+slope_dist$site[slope_dist$lat %in% unique(slope_dist$lat)[5]] <- 'Teton'
+slope_dist$site[slope_dist$lat %in% unique(slope_dist$lat)[6]] <- 'Powdermill'
+slope_dist$site[slope_dist$lat %in% unique(slope_dist$lat)[7]] <- 'Waterfall'
 slope_dist$site <- factor(slope_dist$site, levels=c("Brazil", "Panama", "Guanica", "Palomarin", 
                                                     "Powdermill", "Waterfall", "Teton"))
 slope_dist$lat <- as.numeric(as.character(slope_dist$lat))
 slope_dist_plot <- ggplot(data=slope_dist, aes(x=site, y=slope_mass)) +
   theme_bw() +
   theme(strip.background = element_blank()) +
-  geom_boxplot(alpha=0.7, aes(fill=abs(lat)))+
+  geom_hline(yintercept = 0, size=0.65, linetype="dashed") +
+  geom_boxplot(alpha=0.7, outlier.shape = NA, aes(fill=abs(lat)))+
   scale_fill_gradient(
     low = 'firebrick', high = 'dodgerblue') + 
-  geom_jitter(pch=21, alpha=0.5) +
-  ylab(expression(paste(Delta," Mass (g/yr)"))) +
+  geom_jitter(pch=21, alpha=0.5, width=0.18) +
+  ylab(expression(paste(Delta," Mass ", (g/yr^-1)))) +
   annotate("segment", x = 3, xend = 1, y = 0.25, yend = 0.25,
            colour = "black", size = 0.65, arrow = arrow(type = "closed", length = unit(0.25, "cm"))) +
   annotate("text", x = 2, y = 0.3, label = "Tropical", size = 4) +
-  annotate("segment", x = 5, xend = 7, y = 0.25, yend = 0.25,
+  annotate("segment", x = 4, xend = 7, y = 0.25, yend = 0.25,
            colour = "black", size = 0.65, arrow = arrow(type = "closed", length = unit(0.25, "cm"))) +
-  annotate("text", x = 6, y = 0.3, label = "Temperate", size=4) +
+  annotate("text", x = 5.5, y = 0.3, label = "Temperate", size=4) +
   xlab("Site") +
   ylim(-0.3,0.3) +
   labs(fill="abs(Latitude)")
@@ -696,15 +697,16 @@ slope_dist_plot_alt <- ggplot(data=slope_dist, aes(x=site, y=slope_mass)) +
   theme(strip.background = element_blank(),
         legend.title = element_blank(),
         legend.position = "none") +
-  geom_boxplot(alpha=0.7, aes(fill=site)) +
-  geom_jitter(pch=21, alpha=0.5) +
-  ylab(expression(paste(Delta," Mass (g/yr)"))) +
+  geom_hline(yintercept = 0, size=0.65, linetype="dashed") +
+  geom_boxplot(alpha=0.7, outlier.shape = NA, aes(fill=site)) +
+  geom_jitter(pch=21, alpha=0.5, width=0.18) +
+  ylab(expression(paste(Delta," Mass ", (g/yr^-1)))) +
   annotate("segment", x = 3, xend = 1, y = 0.25, yend = 0.25,
            colour = "black", size = 0.65, arrow = arrow(type = "closed", length = unit(0.25, "cm"))) +
   annotate("text", x = 2, y = 0.3, label = "Tropical", size = 4) +
-  annotate("segment", x = 5, xend = 7, y = 0.25, yend = 0.25,
+  annotate("segment", x = 4, xend = 7, y = 0.25, yend = 0.25,
            colour = "black", size = 0.65, arrow = arrow(type = "closed", length = unit(0.25, "cm"))) +
-  annotate("text", x = 6, y = 0.3, label = "Temperate", size=4) +
+  annotate("text", x = 5.5, y = 0.3, label = "Temperate", size=4) +
   xlab("Site") +
   ylim(-0.3,0.3)
 
@@ -753,19 +755,19 @@ wate_temps <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/wa
 
 # subset columns; add ID col
 brazil_temps <- brazil_temps[,c("year", "MAT", "species")]
-brazil_temps$site <- "brazil"
+brazil_temps$site <- "Brazil"
 panama_temps <- panama_temps[,c("year", "MAT", "species")]
-panama_temps$site <- "panama"
+panama_temps$site <- "Panama"
 guanica_temps <- guanica_temps[,c("year", "MAT", "species")]
-guanica_temps$site <- "guanica"
+guanica_temps$site <- "Guanica"
 powdermill_temps <- powdermill_temps[,c("year", "MAT", "species")]
-powdermill_temps$site <- "powdermill"
+powdermill_temps$site <- "Powdermill"
 palo_temps <- palo_temps[,c("year", "MAT", "species")]
-palo_temps$site <- "palomarin"
+palo_temps$site <- "Palomarin"
 tss_temps <- tss_temps[,c("year", "MAT", "species")]
-tss_temps$site <- "teton"
+tss_temps$site <- "Teton"
 wate_temps <- wate_temps[,c("year", "MAT", "species")]
-wate_temps$site <- "waterfall"
+wate_temps$site <- "Waterfall"
 
 # merge
 temp_df <- rbind.data.frame(brazil_temps, panama_temps, guanica_temps,
@@ -776,15 +778,24 @@ temp1 <- ggplot(data=temp_df, aes(year, MAT))+
   theme_bw() +
   theme(legend.position="none",
         strip.background = element_blank()) +
-  ylab("mean monthly temperature (°C)") +
+  ylab("Mean monthly temperature (°C)") +
+  xlab("Year") +
   stat_smooth(geom='line', alpha=0.25, method='lm', aes(color=species)) +
   geom_smooth(method='lm', se = FALSE, color="black") +
   facet_wrap(~site, scales="free_y")
 
-
 pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s6.pdf", width=6, height=5)
 temp1
 dev.off()
+
+# get slopes of change in temp
+for(i in unique(temp_df$site)){
+  tmp <- temp_df[temp_df$site==i,]
+  mod <- lm(tmp$MAT ~ tmp$year)
+  slope <- as.numeric(mod$coefficients[2])
+  change_yr <- max(tmp$year) - min(tmp$year)
+  print(paste0(i, " ", slope, " ", change_yr, " ", (slope*change_yr)))
+}
 
 # single climate regression for each site, using summer data for temp sites. temperature to start...
 temperate_sites <- c("Powdermill","Teton","Waterfall","Palomarin")
@@ -796,16 +807,16 @@ all_temps.df <- all_temps.df[!all_temps.df$site=="Puerto.Rico",]
 all_temps.df <- all_temps.df[!all_temps.df$site %in% temperate_sites,]
 all_temps.df$site <- factor(all_temps.df$site)
 all_temps.df$site <- revalue(all_temps.df$site, 
-                             c("Brazil"="brazil", "Guanica"="guanica","Panama"="panama"))
+                             c("Brazil"="Brazil", "Guanica"="Guanica","Panama"="Panama"))
 summer_temps.df <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/summer_temps.csv")
 summer_temps.df <- summer_temps.df %>%
   gather(site, "MAT", 3:10) 
 summer_temps.df <- summer_temps.df[!summer_temps.df$site=="Puerto.Rico",]
 summer_temps.df <- summer_temps.df[!summer_temps.df$site %in% tropical_sites,]
 summer_temps.df$site <- factor(summer_temps.df$site)
-summer_temps.df$site <- revalue(summer_temps.df$site, c("Palomarin"="palomarin",
-                                "Powdermill"="powdermill",
-                                "Teton"="teton","Waterfall"="waterfall"))
+summer_temps.df$site <- revalue(summer_temps.df$site, c("Palomarin"="Palomarin",
+                                "Powdermill"="Powdermill",
+                                "Teton"="Teton","Waterfall"="Waterfall"))
 final_temps.df <- rbind.data.frame(all_temps.df, summer_temps.df)
 temp2 <- ggplot(final_temps.df, aes(x=year,y=MAT)) +
   theme_bw() +
@@ -814,8 +825,8 @@ temp2 <- ggplot(final_temps.df, aes(x=year,y=MAT)) +
   geom_point() +
   geom_smooth(method="lm") +
   facet_wrap(~ site, scales="free_y") +
-  ylab("mean annual temperature (°C)") +
-  xlab("year")
+  ylab("Mean annual temperature (°C)") +
+  xlab("Year")
 
 pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s7.pdf", width=6, height=5)
 temp2
@@ -824,35 +835,44 @@ dev.off()
 # ...now, precip:
 all_precip.df <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/all_precip.csv")
 all_precip.df <- all_precip.df %>%
-  gather(site, "MAT", 3:10) 
+  gather(site, "MAP", 3:10) 
 all_precip.df <- all_precip.df[!all_precip.df$site=="Puerto.Rico",]
 all_precip.df <- all_precip.df[!all_precip.df$site %in% temperate_sites,]
 all_precip.df$site <- factor(all_precip.df$site)
 all_precip.df$site <- revalue(all_precip.df$site, 
-                              c("Brazil"="brazil", "Guanica"="guanica","Panama"="panama"))
+                              c("Brazil"="Brazil", "Guanica"="Guanica","Panama"="Panama"))
 summer_precip.df <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/summer_precip.csv")
 summer_precip.df <- summer_precip.df %>%
-  gather(site, "MAT", 3:10) 
+  gather(site, "MAP", 3:10) 
 summer_precip.df <- summer_precip.df[!summer_precip.df$site=="Puerto.Rico",]
 summer_precip.df <- summer_precip.df[!summer_precip.df$site %in% tropical_sites,]
 summer_precip.df$site <- factor(summer_precip.df$site)
-summer_precip.df$site <- revalue(summer_precip.df$site, c("Palomarin"="palomarin",
-                                                          "Powdermill"="powdermill",
-                                                          "Teton"="teton","Waterfall"="waterfall"))
+summer_precip.df$site <- revalue(summer_precip.df$site, c("Palomarin"="Palomarin",
+                                                          "Powdermill"="Powdermill",
+                                                          "Teton"="Teton","Waterfall"="Waterfall"))
 final_precip.df <- rbind.data.frame(all_precip.df, summer_precip.df)
-precip2 <- ggplot(final_precip.df, aes(x=year,y=MAT)) +
+precip2 <- ggplot(final_precip.df, aes(x=year,y=MAP)) +
   theme_bw() +
   theme(legend.position="none",
         strip.background = element_blank()) +
   geom_point() +
   geom_smooth(method="lm") +
   facet_wrap(~ site, scales="free_y") +
-  ylab("mean monthly precipitation (cm)") +
-  xlab("year")
+  ylab("Mean monthly precipitation (cm)") +
+  xlab("Year")
 
 pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s8.pdf", width=6, height=5)
 precip2
 dev.off()
+
+# get slopes of change in precip
+for(i in unique(final_precip.df$site)){
+  tmp <- final_precip.df[final_precip.df$site==i,]
+  mod <- lm(tmp$MAP ~ tmp$year)
+  slope <- as.numeric(mod$coefficients[2])
+  change_yr <- max(tmp$year) - min(tmp$year)
+  print(paste0(i, " ", slope, " ", change_yr, " ", (slope*change_yr)))
+}
 
 # write precip dfs
 precip_change(file_path = "~/Dropbox/Bird_body_size-analysis/bird_body_size/data/brazil_filtered.csv",
@@ -895,19 +915,19 @@ wate_precips <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/
 
 # subset columns; add ID col
 brazil_precips <- brazil_precips[,c("year", "MAP", "species")]
-brazil_precips$site <- "brazil"
+brazil_precips$site <- "Brazil"
 panama_precips <- panama_precips[,c("year", "MAP", "species")]
-panama_precips$site <- "panama"
+panama_precips$site <- "Panama"
 guanica_precips <- guanica_precips[,c("year", "MAP", "species")]
-guanica_precips$site <- "guanica"
+guanica_precips$site <- "Guanica"
 powdermill_precips <- powdermill_precips[,c("year", "MAP", "species")]
-powdermill_precips$site <- "powdermill"
+powdermill_precips$site <- "Powdermill"
 palo_precips <- palo_precips[,c("year", "MAP", "species")]
-palo_precips$site <- "palomarin"
+palo_precips$site <- "Palomarin"
 tss_precips <- tss_precips[,c("year", "MAP", "species")]
-tss_precips$site <- "teton"
+tss_precips$site <- "Teton"
 wate_precips <- wate_precips[,c("year", "MAP", "species")]
-wate_precips$site <- "waterfall"
+wate_precips$site <- "Waterfall"
 
 # merge
 precip_df <- rbind.data.frame(brazil_precips, panama_precips, guanica_precips,
@@ -918,7 +938,8 @@ precip1 <- ggplot(data=precip_df, aes(year, MAP))+
   theme_bw() +
   theme(legend.position="none",
         strip.background = element_blank()) +
-  ylab("mean monthly precipation (cm)") +
+  ylab("Mean monthly precipation (cm)") +
+  xlab("Year") +
   stat_smooth(geom='line', alpha=0.25, method='lm', aes(color=species)) +
   geom_smooth(method='lm', se = FALSE, color="black") +
   facet_wrap(~site, scales="free_y")
@@ -930,20 +951,21 @@ dev.off()
 
 # correlated temp and precip plot
 climate_corr <- read.csv("~/Dropbox/Bird_body_size-analysis/bird_body_size/data/all_analysis_df.csv")
-climate_corr$site[climate_corr$lat %in% unique(climate_corr$lat)[1]] <- 'brazil'
-climate_corr$site[climate_corr$lat %in% unique(climate_corr$lat)[2]] <- 'panama'
-climate_corr$site[climate_corr$lat %in% unique(climate_corr$lat)[3]] <- 'guanica'
-climate_corr$site[climate_corr$lat %in% unique(climate_corr$lat)[4]] <- 'palomarin'
-climate_corr$site[climate_corr$lat %in% unique(climate_corr$lat)[5]] <- 'powdermill'
-climate_corr$site[climate_corr$lat %in% unique(climate_corr$lat)[6]] <- 'waterfall'
-climate_corr$site[climate_corr$lat %in% unique(climate_corr$lat)[7]] <- 'teton'
+climate_corr$site[climate_corr$lat %in% unique(climate_corr$lat)[1]] <- 'Brazil'
+climate_corr$site[climate_corr$lat %in% unique(climate_corr$lat)[2]] <- 'Panama'
+climate_corr$site[climate_corr$lat %in% unique(climate_corr$lat)[3]] <- 'Guanica'
+climate_corr$site[climate_corr$lat %in% unique(climate_corr$lat)[4]] <- 'Palomarin'
+climate_corr$site[climate_corr$lat %in% unique(climate_corr$lat)[5]] <- 'Teton'
+climate_corr$site[climate_corr$lat %in% unique(climate_corr$lat)[6]] <- 'Powdermill'
+climate_corr$site[climate_corr$lat %in% unique(climate_corr$lat)[7]] <- 'Waterfall'
 
 corr <- ggplot(data=climate_corr, aes(x=slope_temp, y=slope_precip, color=site)) +
   theme_bw() +
   theme(strip.background = element_blank()) +
   geom_point() +
-  ylab("change mean monthly precipation") +
-  xlab("change mean monthly temperature") 
+  ylab("Change mean monthly precipation") +
+  xlab("Change mean monthly temperature") +
+  labs(color="Site")
   
 pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s10.pdf", width=6, height=5)
 corr
@@ -1006,7 +1028,8 @@ mass_dist_plot <- ggplot(data=mass_dist, aes(x=site, y=starting_mass)) +
   geom_boxplot(alpha=0.7, aes(fill=abs(lat)))+
   geom_jitter(pch=21, alpha=0.5) +
   labs(fill="abs(Latitude)") +
-  ylab("starting mass (g)")
+  ylab("Starting mass (g)") +
+  xlab("Site")
 
 pdf("~/Dropbox/Bird_body_size-analysis/bird_body_size/figures/s12.pdf", width=7, height=5)
 mass_dist_plot
